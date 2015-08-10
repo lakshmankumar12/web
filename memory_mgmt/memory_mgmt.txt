@@ -1,0 +1,790 @@
+Memory Management
+=================
+:toc:
+
+Introduction
+------------
+
+This article explains how a process, specifically one that is developed using
+c programming language, gets its memory for its execution in linux operating
+system. The reader is encouraged to experiment the various sample programs
+shown here himself/herself and also try the suggested exercises to get a deeper
+understanding.
+
+The article covers virtual addressing, system-calls for memory management,
+and libc(user-space) implementation detail.
+
+Review of common c programming knowledge
+-----------------------------------------
+
+Before we dive into depths of memory management, lets just review what we read
+as part of c-classes in school/under-graduation/graduation.
+
+All C programmers *should* be already knowing this, but neverthless the reader
+is asked to skim through this to lay down the terms further used in the
+rest of the article. If the contents of this review section sounds unfamiliar
+to you, you should stop reading this article. This article is not for you yet.
+You should gain some c programming experience and come back later.
+
+Memory Segments
+~~~~~~~~~~~~~~~~
+
+One or more c-source files are compiled and linked to form an executable
+program-file.  The internals of this activity is out of the scope of this
+article. This program-file, once built can then be executed as many times.
+Each execution instantiates a process. Multiple instantiations of the same
+program-file can be done simultaneoulsy. Each of these processes run
+independant of each other.
+
+At school, we learnt that each process has 4 segments. A brief explanation
+of each segment is given beside.
+ 
+. Code Segment
++
+Contains the compiled instructions.
++
+. Data Segment
++
+Contains global variables, static variables defined inside functions
++
+. Stack Segment
++
+Contains all local variables, function-arguments and return values. The stack 
+automagically grows and shrinks based on the depth of functions invoked. 
++
+. Heap Segment
++
+Contains all memory explicity allocated by the process at run-time. Unlike the
+code and data segments whose sizes are known at load-time, the heap is
+dynamic.  The size of the heap segment of the process grows (or shrinks) based
+on the run-time needs of the process.
+
+Each process instantiated from the same program file might share the code
+segment, but will have its own data, stack and heap segments. This ensures 
+that every process runs privately without tramplng on each other. Threads
+or Light Weight Processes are entities that just have a private stack 
+but can access the same memory. Since ASR5k implementation doesn't make
+use of threads/LWP, this article doesn't discuss it further.
+
+The article will soon explain each of these segments of a c-program in finer
+detail by dissecting the executable we get and the process we run,
+familiarizing with a few tools as we do this activity, but lets just continue
+with our review.
+
+Lets take this sample program
+
+.program1.c
+----
+#include <stdio.h>
+int global_a;
+
+int function1(int arg_a, int *parg_b)
+{
+  static int static_c;
+  *parg_b = static_c;
+  int local_d = arg_a + 1;
+  return local_d;
+}
+
+int main(int argc, char *argc[])
+{
+  int local_a, local_b, local_c;
+  printf ("Enter a number:");
+  scanf("%d",&local_a);
+  local_b = function1(local_a, &local_c);
+  printf ("The function1 churned a few hunderd cycles "
+          "of instructions and found that %d+1 is %d\n"
+          "The last time, this function1 was called with "
+          "an input of %d\nHope you find it useful\n",
+          local_a, local_b, local_c);
+  return 0;
+}
+----
+
+We build the above source file into a program-file and execute it. The
+assembled-instructions of main and function1 go into the code-segment. The
+code-segment also consists of the instructions from the many other functions
+provided as part of standard c library, of which we explicity make use of
+printf and scanf in our program. The variables global_a, static_c both go into
+the data-segment. This segment is determined when the process starts and is
+the same size till the program ends - as we know the list of all global and
+static variables at link-time, and these remain around till the process ends.
+The variables local_a, local_b, local_c stay in the stack-frame of
+main-function, while variables arg_a, parg_b, local_d stay in the stack frame
+of the function1. 
+
+This is a pictorial illustration of the stack at the time function1() is under
+execution.  The stack segment's memory management will not be covered in this
+article.
+
+----
+<Draw stack>
+----
+
+The above program doesn't allocate any dynamic memory itself. We dont know if 
+printf() or scanf() does. 
+
+Dynamic memory
+~~~~~~~~~~~~~~
+
+We use the following functions to meet the dynamic memory needs of our
+process. Memory obtained via these functions are from the Heap Segment.
+The memory obtained from these functions is to be explicity managed by
+the programmer. In simpler words, when a memory is no longer required,
+the programmer invokes the free() api to let go the memory so that it
+can be made use again, when the programmer asks for memory.
+
+. void* malloc(size_t n)
++
+Allocates n bytes of memory and returns a pointer to the start of the n 
+bytes. The returned memory is sufficiently memory aligned for the system's
+alignment requirements. It returns NULL if no memory could be allocated.
+Its illegal to use memory beyond n bytes and its illegal to use memory 
+before the returned ptr. The former is referred as over-flow while the latter
+is referred as under-flow.
++
+. void free(void *ptr)
++
+Releases the memory pointed to by ptr, which has been earlier obtained via
+one of malloc, calloc, realloc. Its okay to call free(NULL), which is a no-op.
+However, its illegal to pass any non-NULL ptr that is not obtained via the
+aforesaid functions. Its illegal to free a ptr more than once. It is illegal to
+continue to use(either read/write) a memory that is free'd.
++
+. void* calloc(size_t nmemb, size_t size)
++
+It is just malloc(nmemb*size) followed by a bzero() offered for convenience.
++
+. void* realloc(void *ptr, size_t n)
++
+This is a bit more tricky. It grows/shrinks/allocates/releases/does-nothing 
+depending on what you told to do and the current situation of the process. We
+will not elaborate all the nitty-gritty here. We just assume you have read the
+man pages sufficiently till you got all points home before you use this
+function.
+
+There are memalign, vmalloc, pvalloc, malloc_usable_size and a few more, but
+its okay if you didn't know them. We will see them as we explore later 
+in the article.
+
+The quick review concludes. The article will take you further on how each 
+of the above just works in linux, why a few bugs blow up or get covered up
+in certain ways, among other topics. The article is rather long. Its okay to read
+it with breaks (of many days) in between. Fasten your belts and lets dive in.
+
+How the segments are really laid out
+-----------------------------------
+
+All segments are in the same addressing-range
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In linux, all the above segments are made available to a process in the same
+addressing range via the pointer data-type. The pointer data-type is
+sufficient to address any location in any of the segments. This is in contrast
+to a few other operating systems which have different types of pointers -
+far/near, while linux makes no such distinction. There are different pointer
+types as seen by compiler, for example apple_t* is different from orange_t*,
+but this distinction is just at compile time, limited to arithmetic on the
+pointer and to how much is to be extracted when making pointer de-references.
+But the actual content of these 2 pointer-types itself is exactly the same. 
+A assignment of pointer of type apple_t* to orange_t* is illegal for a
+different reason, but the void* in c, can morph silently into any pointer type
+and any pointer-type can also decay to a void*, as the space necessary to hold
+any pointer-type is the same. This enables us to store and pass pointers to
+functions (code-segment), pointers to global-data(data-segment), pointers to
+local-variables(stack) and pointers obtained from heap freely using the
+same pointer variable.
+
+For example, in this following code
+
+----
+void compute_sum(int *result, int a, int b)
+{
+  /* nothing to ensure result is a sane location,
+     the caller is squarely responsible for any
+     catastrophe, that arises when its not */
+  *result = a + b;
+  return;
+}
+----
+
+the result pointer could point to any writable int location. It could be in
+the stack segment(address of a valid local variable), data-segment(address of
+a global variable) or from heap-segment. We dont bother qualifying the pointer
+beyond just the data-type to which it points. The pointer itself takes the
+same to represent, enabling the above single representation for the pointer,
+to all segments alike.
+
+It's all pages and permissions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Lets take a 32 bit system. Pointer data-types in this system is 32 bits long.
+This makes the maximum theoretically addressable locations 2^32=4G. 4G
+locations was an awful lot of space when 32 bit processors were introduced, 
+but is now certainly pretty common-place. Nevertheless in a 32-bit machine,
+or when compiled in 32-bit mode, a process is simply restricted by this 
+simple pointer-size limitation that it can see no more than 4G different 
+locations, irrespective of the available main memory or swap memory, and has
+to manage all its memory needs in this space.
+
+Different address locations are used for different purposes - code, stack,
+heap, data.  Among the data, we have read-only data and mutable data. To
+provide for such different needs, linux manages memory in units of *pages*. A
+page is typically 4K in size.  Different systems make different choices. 4K is
+quite a popular choice and is also the choice of Star-OS. The concepts are the
+same for any page size.
+
+Not all processes need all the 4G locations to run. In fact, its still 
+considered gargantaun, to consume so much memory for a single process.  Most
+processes just consume a tiny portion of this theoretical limit.  Linux offers
+a process just about as much memory as it wants and considers the rest of the
+address values as invalid for the process. This enables linux to send a SEGSEV
+signal to the process, when it tries to read/write a address that is outside
+of its allowed range. Processes typically terminate on this signal, the 
+notorious segmentation-fault we are familiar with.
+
+The entire address range is a collection of pages. For example, the 4G 
+individual bytes a process can theoretically have, is a collection of 1M pages
+with each page 4K long. Since a process doesn't really use all the memory,
+out of 1M pages, a tiny fraction - about a few hundred pages are typically 
+used by most small processes. Linux allows each process to delcare the 
+permissions of each page that it owns. Its typically non-sensical to twist
+the permissions of those pages that are auto-setup as part of load-time.
+Most page-permissions are edited if at all for those pages, which processes
+explicitly get during execution. A page could be readble, writable,
+executable. It could be private or shared with other processes (not necesarily
+at the same address for the other processes).
+
+Just as its illegal to read/write a memory that is simply not a valid page
+for the process, its also illegal to do an operation on a page without the 
+valid permission. The process is immediately blessed with SIGSEV by Linux
+on such violations.
+
+Address map of a process
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Each process has an *address map* maintained for it by linux, which indicates
+which address ranges are valid and which address ranges have what permissions.
+The fun part is that linux simply exposes this address map to be easily
+readable via the /proc file system. 
+
+For those who haven't come across this /proc file system yet, there is always
+a /proc directory in the root directory.  This is not a real directory, but a
+vitual one. This directory contains many files and folders, all of them
+virtual too. One can just read these files as if they are normal files. Each
+file displays some information which kernel maintains. There is folder for
+every process that is currently running, with the folder named on the pid of 
+the process. This folder contains further information pertaining to this
+single process. The /proc/self is a special folder within the already special
+/proc folder (the /proc is a kernel maintained folder, so there is no end to
+what the kernel can adjust within here), which is simply the /proc/pid of the
+invoking process. 'man proc' elaborates on the various other information
+available in this data mine.
+
+The address map of a process is visible via the /proc/pid/maps file for any
+process. Lets just see one sample output.
+
+----
+[lakskuma@bgl-mitg-sim64:~]$cat /proc/self/maps
+08048000-0804c000 r-xp 00000000 08:01 631493     /bin/cat
+0804c000-0804d000 rw-p 00003000 08:01 631493     /bin/cat
+0804d000-0806e000 rw-p 0804d000 00:00 0          [heap]
+b7e61000-b7ea8000 r--p 00000000 08:01 485783     /usr/lib/locale/locale-archive
+b7ea8000-b7ea9000 rw-p b7ea8000 00:00 0
+b7ea9000-b7fd7000 r-xp 00000000 08:01 566767     /lib/tls/libc-2.3.6.so
+b7fd7000-b7fdc000 r--p 0012e000 08:01 566767     /lib/tls/libc-2.3.6.so
+b7fdc000-b7fdf000 rw-p 00133000 08:01 566767     /lib/tls/libc-2.3.6.so
+b7fdf000-b7fe1000 rw-p b7fdf000 00:00 0
+b7fe8000-b7fea000 rw-p b7fe8000 00:00 0
+b7fea000-b7feb000 r-xp b7fea000 00:00 0          [vdso]
+b7feb000-b8000000 r-xp 00000000 08:01 566744     /lib/ld-2.3.6.so
+b8000000-b8002000 rw-p 00015000 08:01 566744     /lib/ld-2.3.6.so
+bffea000-c0000000 rw-p bffea000 00:00 0          [stack]
+[lakskuma@bgl-mitg-sim64:~]$
+----
+
+By using /proc/self, we just got the address-map of the cat process itself.
+
+The columns are
+
+[verse]
++*address           perms offset  dev   inode      pathname*+
++08048000-0804c000 r-xp 00000000 08:01 631493     /bin/cat+
+
+jnormal]
+The first column tells the range of the address. The next column gives the 
+permission(rwx) and the shared'ness of the page(private/shared). The next
+3 columns are relevant for address'es which are mapped to files - Offset of
+this range in the physical file, device number where file is present and 
+inode of the file. The last column is the pathname of the file, or one of
+heap/stack/vdso or empty.
+
+Lets wade over the maps. To begin with, just at the moment when it read this
+/proc/self/maps file was using only 470 pages, about 1.9Mb out of the
+available 1M pages(4G). Clearly cat's memory consumption for this invocation
+was modest.
+
+----
+                                                     Pages   Memory size
+08048000 0804c000 r-xp /bin/cat                           4      16384
+0804c000 0804d000 rw-p /bin/cat                           1       4096
+0804d000 0806e000 rw-p [heap]                            33     135168
+b7e61000 b7ea8000 r--p /usr/lib/locale/locale-archive    71     290816
+b7ea8000 b7ea9000 rw-p                                    1       4096
+b7ea9000 b7fd7000 r-xp /lib/tls/libc-2.3.6.so           302    1236992
+b7fd7000 b7fdc000 r--p /lib/tls/libc-2.3.6.so             5      20480
+b7fdc000 b7fdf000 rw-p /lib/tls/libc-2.3.6.so             3      12288
+b7fdf000 b7fe1000 rw-p                                    2       8192
+b7fe8000 b7fea000 rw-p                                    2       8192
+b7fea000 b7feb000 r-xp [vdso]                             1       4096
+b7feb000 b8000000 r-xp /lib/ld-2.3.6.so                  21      86016
+b8000000 b8002000 rw-p /lib/ld-2.3.6.so                   2       8192
+bffea000 c0000000 rw-p [stack]                           22      90112
+                                                      -----    -------
+                                             Sum:       470    1925120
+                                                      -----    -------
+----
+
+We can easily place what each address range is used for. We get cues from
+the address permissions and the path-name. If we notice the first valid 
+address itself is 0x08048000. The first (134Mb) addresses from 0x0 are 
+left unmapped. This ensure all NULL pointer de-references are immeidately
+seg-faulted as they dont map to a valid address. The long unmapped region
+also helps to seg-fault dereferences from any offset from a NULL pointer, 
+as long as the offset is withing 134Mb!
+ 
+The first 2 ranges are from the cat-program file itself. The permissions 
+of the first range is r-x. Its readable and excecutable. So, this maps to 
+the code part of the cat-program. This is not writable, so any attempt 
+to modify the instructions, while in execution will fault the process. 
+The next range has rw- and is also from the cat-program. This hence is 
+the data part of the cat-program. This contains all the global and static
+data definied in the cat-program. All the code of the cat program fit
+into just 4 pages, and all the global variables used fits in just 1 page.
+It should be noted that even if a program delcared just 1 variable,
+it would still consume 1 page, as 1 page is the least unit of data 
+the kernels allocates/takes-back to/from a process.
+
+The regular heap 
+^^^^^^^^^^^^^^^^
+
+The next range is +0804d000-0806e000+ and has permissions of rw- and is
+marked as heap. This is the regular heap from where memory obtained
+via malloc comes. The end of this range is called the *break-point*. There
+is a fairly lot of space to extend the heap from its current break-point.
+This is to accomodate memory intensive processes that need a lot of heap.
+The heap of the cat program at the time of this snapshot was 33 pages.
+
+The heap typically starts right after the code and data segments of the 
+program-file ends. And there is a good room from the heap to grow upwards.
+
+The stack
+^^^^^^^^^
+
+We will break our address-range walk in the serial order for the moment
+and go the last range. This range +bffea000-c0000000+ is marked the 
+stack. The stack starts from the high-end and growns downward! This is
+how x86 is designed - the push/pop and call/ret instructions operate
+the stack-pointer thusly. The stack is presently 22 pages long. 
+The stack unlike the heap will automatically grow when it exceeds the 
+current limit. The kernel will detect the stack's need for growth and
+add pages to the stack. However, the stack cannot infintely grow and 
+once the stack's tip neards the end of the previous segment the kernel
+faults the process. 
+
+The other ranges
+^^^^^^^^^^^^^^^^
+
+Going by our school education, we have met all the segments of the cat
+program - code/data/stack and heap. However we will have address ranges
+to explore on a real process. Lets take them on. We will cotinue from 
+where we left after the heap.
+
+----
+b7e61000 b7ea8000 r--p /usr/lib/locale/locale-archive  
+b7ea8000 b7ea9000 rw-p                                 
+b7ea9000 b7fd7000 r-xp /lib/tls/libc-2.3.6.so          
+b7fd7000 b7fdc000 r--p /lib/tls/libc-2.3.6.so          
+b7fdc000 b7fdf000 rw-p /lib/tls/libc-2.3.6.so          
+b7fdf000 b7fe1000 rw-p
+----
+
+These belong to the libc library. The cat program-file in itself is 
+small. However, since it makes use of the stand-c-library, and links
+it dynamically, when the cat program is invoked, the loader automatically
+also loads this library along. The library could get loaded in any 
+address range, and it happens to get loaded at 0xb7ea900 in this 
+invocation of cat program. The dynamically loadable libraries are 
+compiled specially so that they are position independant - the code
+could sit at any address location.  
+
+The libc library's code is loaded at +b7ea9000-b7fd7000+ as it has executable
+permission. The libc library comes with a bunch of read-only variables that
+are kept at +b7fd7000-b7fdc000+ as this range has just the read-permission.
+The other data variables of the libc library is at +b7fdc000-b7fdf000+ going
+by the permissions and the path name against that range. The libc library also
+loads the local-archive file's contents into memory which is memory mapped to
+address 0xb7e61000.  In addition the libc library has also asked kernel for
+one page of writable memory at 0xb7ea800 and 2 pages at 0xb7fdf000.
+
+The other ranges are
+----
+b7fe8000 b7fea000 rw-p                  
+b7fea000 b7feb000 r-xp [vdso]           
+b7feb000 b8000000 r-xp /lib/ld-2.3.6.so 
+b8000000 b8002000 rw-p /lib/ld-2.3.6.so 
+----
+
+Just like the ubiquitous libc library, the ld library is also part of every
+dynamically linked program. This library is the linux loader and has all 
+the routines needed to load a new library into this process. While the libc
+library is loaded at beginning of execution, libraries may also be explicitly
+loaded or unloaded at a later point in time by a process using dlopen() calls.
+The ld library kicks in at those points. The ld's code is mapped at 0xb7feb000
+and the data-segment is mapped at 0xb80000000. 
+
+The vdso is another dynamically linked library, just that the program-file of
+this library is not a regular file, but inside the kernel. This contains the
+implementation of the syscall() function, needed to gate into the kernel, when
+making a system-call. Since this is very architecture dependant, making this a
+separate library function, provided by the kernel itself, insulates the libc
+library from dependance on architecture. 
+
+The other regions is probably added by the ld library into this process space
+for its dynamic needs.
+
+A Few experiments on address maps
+---------------------------------
+
+Address map of yet another process
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Lets do another simple program and see its address map.
+
+.print_address_map.c
+----
+include::print_address_map.c[]
+----
+
+Here is the output of running this program.
+----
+08048000-08049000 r-xp 00000000 00:15 29635118   /...../a.out
+08049000-0804a000 rw-p 00000000 00:15 29635118   /...../a.out
+0804a000-0806b000 rw-p 0804a000 00:00 0          [heap]
+b7ea8000-b7ea9000 rw-p b7ea8000 00:00 0
+b7ea9000-b7fd7000 r-xp 00000000 08:01 566767     /lib/tls/libc-2.3.6.so
+b7fd7000-b7fdc000 r--p 0012e000 08:01 566767     /lib/tls/libc-2.3.6.so
+b7fdc000-b7fdf000 rw-p 00133000 08:01 566767     /lib/tls/libc-2.3.6.so
+b7fdf000-b7fe1000 rw-p b7fdf000 00:00 0
+b7fe7000-b7fea000 rw-p b7fe7000 00:00 0
+b7fea000-b7feb000 r-xp b7fea000 00:00 0          [vdso]
+b7feb000-b8000000 r-xp 00000000 08:01 566744     /lib/ld-2.3.6.so
+b8000000-b8002000 rw-p 00015000 08:01 566744     /lib/ld-2.3.6.so
+bffea000-c0000000 rw-p bffea000 00:00 0          [stack]
+The stack roughly begins at 0xbfffebe0
+----
+
+Interestingly, just like the cat program our program too starts just at
+0x08048000. Our program is even leaner than cat with just 1 page of code
+segment. The data segment is also just 1 page, although we didn't declare any
+global or static variable. Although we dont do any malloc we still see 
+about 33 pages of heap! We dont have to fret at this splurge on part of our
+build chains. There is 1M pages available. The rest of the pages are quite
+similar to that of cat, including the stack. 
+
+The stack at main was at 0xbfffebe0. The current tip is 20 pages away,
++0xbfffe - 0xbffea+. We have called some functions, so, we can't say if the
+stack really grew up as many pages, or if all programs just start with so
+much of stack bleesed at birth. There are 2 pages below our main's stack frame
++0xc0000 - 0xbfffe+. 
+
+.Suggested Exercises
+****
+* Add a scanf in the end of the program to keep it running. Run the same
+  program multiple times. See the output of these simultaneiously running
+  processes.
+* compile and run this program in a 64 bit machine and see the output.
+* compile this program in a 64 bit machine, using -m32 switch. This compiles
+  the program in 32-bit mode. Run and see the output.
+****
+
+Lets blow our stack
+~~~~~~~~~~~~~~~~~~~
+
+Lets study how big the kernel lets our program to grow its stack. We will make
+use of recursion to just let our program die by itself.
+
+.blow_stack.c
+----
+include::blow_stack.c[]
+----
+
+We record the last known tip of the stack in a file. gcc now supports
+declaring variable sized arrays on stack. We make use of this to control
+how big each stack frame is. When the above was run with 4096, 1024 and 128,
+we see that tip of the stack was as follows.
+
+----
+[lakskuma@bgl-mitg-sim64:~]$./a.out
+Stack begins at roughly:0xbfffebd4
+How fast do u want to die?128
+Segmentation fault
+[lakskuma@bgl-mitg-sim64:~]$wc stack_tip
+ 52386  52386 576246 stack_tip
+[lakskuma@bgl-mitg-sim64:~]$tail -n 1 128_tip
+0xbf80070b
+[lakskuma@bgl-mitg-sim64:~]$
+
+Size   Stack-Tip  
+----   ---------  
+ 128  0xbf80070b
+1024  0xbf800bab
+4096  0xbf801e0b 
+----
+
+The stack in this system seems to grow till 0xbf8000xxx, about 2046 pages
++0xbfffe-0xbf800+. That's about 8Mb of stack.
+
+.Suggested Exercises
+****
+* Add a signal handler to catch SIGSEV. Did the signal handler get called
+  on signal exhaustion. Just to ensure the registrations are right, try
+  writing to \*((int*)0) and see if that called the signal handler. Ponder
+  why.
+****
+
+Lets blow our heap
+~~~~~~~~~~~~~~~~~~
+
+Lets study how big the kernel lets our program to grow its heap. We will make
+use of interation and a linked list to just keep acquiring memory. Unlike the
+stack, when heap is no longer available, malloc returns a NULL to let us know. 
+We use the memory obtained to chain them, and later release them. We print
+the address-map before any malloc, after all malloc and after all free.
+
+.blow_heap.c
+----
+include::blow_heap.c[]
+----
+
+Upon running this program, we get the following before the malloc started.
+This is comparable to what we have been getting.
+
+----
+Map before any malloc:
+08048000-08049000 r-xp 00000000 00:15 29635118   /....../a.out
+08049000-0804a000 rw-p 00000000 00:15 29635118   /....../a.out
+0804a000-0806b000 rw-p 0804a000 00:00 0          [heap]
+b7ea0000-b7ea9000 rw-p b7ea0000 00:00 0
+b7ea9000-b7fd7000 r-xp 00000000 08:01 566767     /lib/tls/libc-2.3.6.so
+b7fd7000-b7fdc000 r--p 0012e000 08:01 566767     /lib/tls/libc-2.3.6.so
+b7fdc000-b7fdf000 rw-p 00133000 08:01 566767     /lib/tls/libc-2.3.6.so
+b7fdf000-b7fe1000 rw-p b7fdf000 00:00 0
+b7fe6000-b7fea000 rw-p b7fe6000 00:00 0
+b7fea000-b7feb000 r-xp b7fea000 00:00 0          [vdso]
+b7feb000-b8000000 r-xp 00000000 08:01 566744     /lib/ld-2.3.6.so
+b8000000-b8002000 rw-p 00015000 08:01 566744     /lib/ld-2.3.6.so
+bffea000-c0000000 rw-p bffea000 00:00 0          [stack]
+----
+
+Now with a size of 1024, after all malloc, we see that the map is
+as follows. Only the new/changing ranges are shown for brevity
+----
+00048000-08048000 rw-p 00048000 00:00 0                         <-- new
+0804a000-b7e92000 rw-p 0804a000 00:00 0          [heap]         <-- Increased!
+b8002000-bff02000 rw-p b8002000 00:00 0                         <-- new
+bffea000-c0000000 rw-p bffea000 00:00 0          [stack]
+----
+
+So, our program took the break point to the farthest extreme that the kernel
+would let a process go towards. Interestingly, our program also managed to get
+some memory in the 0x0004800 range too and some more from the 0xb8002000 range
+too. What more, the after-free output is same as the output after all
+mallocs. Apparently the free doesn't let go off the memory back to the OS, but
+just keeps the memory with it, anticipating more mallocs. 
+
+.Suggested Exercises
+****
+* Instead of freeing in a FIFO-order, try freeing in LIFO order and see if
+  that makes any difference.
+* Try running the program for different sizes - 128, 4096, 8192
+* Compute the acutual allowed addresses and find how many non-addresseable
+  holes, the process has at its peak memory consumption
+****
+
+Virtual addressing
+-------------------
+
+The asutue reader would have this had this nagging question all along - how 
+does every process manage to get the same start address in its map everytime,
+when the acutal RAM consumption at the time of invocation of the process will
+be different. In fact, chances are the cat program, run as above, would
+perhaps elicit the same map-output always. The simple answer is virtual
+addressing. Every process assumes that it has the entire range of addresses to
+use - all the 4G locations.  And this range is private to every process,
+because the address seen by every process during its execution is a virtual
+address. 
+
+When a instruction is executed in the processor, the processor translates
+every address encountered as part of the instruction into its physical
+address. This understanding is important - the translation happens at run-time
+for every access, in every instruction. So, until then its virtual address all
+over.  This is a great relief for compilers, linkers and loaders as they can
+assume the entire 4G addressable range is for them to use for just this one
+process, without having to worry about the location in RAM. Note, however,
+that dynamic libraries are still position independant, because they can sit on
+any address, in the virtual address range too. However the code of the
+program-file itself and all statically linked libraries have their addresses
+resolved at link-time and the addresses get embedded in the instructions. All
+these addressses are virtual addresses. The addresses used by dynamically
+linked code, arrived after arithemetic, accomodating their position
+independence is also a virtual address. 
+
+The processor has a Memory unit which consults what is called a page-table to
+translate the virtual address into a physical address.
+http://en.wikipedia.org/wiki/Page_table[This] wiki has excellent details on
+how page-tables are set up in x86. Each process has a page-table maitained by
+the kernel, which maps the pages in the virtual address range to a physical
+location in the RAM. When the kernel does a process-switch it has to ensure
+the page-tables are changed to that of the new process that is to be
+scheduled. The CR3 register, for example, in the x86 points to the page-table
+beginning. So, a process-switch involves changing the CR3 register's value so
+that the process will now start using the next process's page-tables.
+
+The page tables are how the processer and kernel enforces the virtual address
+legality. The page-tables contains which virtual addresses are valid and
+contain translation values only for the legal pages. The page-table also
+contains the permissions of the page. This if a address used in a instruction
+doesn't have a translation in the page-table or doesn't have the right
+permission, the processor generates a fault, which switches control to kernel
+and the kernel notifies this to the process via the SEGSEV signal. The page
+table has permissions against one page in the virtual address range and this 
+is why all the addresses in the same page have the same permissions. We can 
+only control permissions to the accuracy of one page. 
+
+The /proc/pid/maps output is a compact page-table display, just listing the 
+valid address ranges and the permissions of the range. Adjacent pages with 
+the same permissions are shown in a single line.
+
+The virtual address helps in efficient sharing of common libraries.  Libraries
+like libc that contain the common functions like printf/scanf are almost
+linked by every process. So the library can itself have one copy in the RAM,
+but it can still be linked at different addresses for each process. Just that
+the page-tables of each process will finally point to the same RAM location.
+The same can be done for multiple processes that are executing the same 
+program-file.
+
+Swapping out/in is also made easy by virtual address. A page can be swapped
+out and be swapped in later at a different RAM location, but still the process
+continues to work with its existing address layout as the virtual address
+continues to remain same, only the page-table entries now are changed to
+reflect the new physical address of the  same virtual address.
+
+How a process can grow its memory
+----------------------------------
+
+We saw that the code-segment and data-segment of a process, via the
+program-file which it is running, or from the libraries linked dynamically are
+determined at birth of the process or when the library is linked in. These
+dont change in size later. The stack (of the main thread) is automagically 
+grown by the kernel till its maximum possible limit. But the stack however, by
+its nature, is available only till the current function frame is existant. The
+stack memory, although is still that of the process, is used by different
+function frames that run presently. So a process has to use its heap to meet
+its persistant run-time needs. We know that we have the malloc() family of
+functions that help us do this. Lets see how malloc library manages to give
+memory.
+
+system-calls to obtain memory
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The functions malloc and its cousins are user-space functions. They are 
+part of the libc library too, just as most other standard c library
+functions like printf and scanf are. What this means is that malloc's
+implementation by itself is limited to the book-keeping of kernel-given
+addresses. When that is exhausted, and a malloc() is invoked, malloc() will
+have to ask the kernel to add more memory to this process. This is done by
+making system-calls, which augment the valid ranges to the process. 
+
+There are 2 system calls which malloc library uses.
+
+* sbrk - This extends (or shrinks) the break-point, in effect growing or 
+         shrinking the process' actual heap.
+* mmap - This is a system call, which among other things, can get more virtual
+         addresses mapped into this process address space. The address
+         obtained via a mmap call is typicall in the midst of both the heap
+         and stack ranges - allowing either to grow sufficiently. Chances are 
+         there a few dynamic libraries already mapped into the process and 
+         these libraries are already limit the stack's possible growth. The 
+         further mmap calls usually obtain regions quite close to these
+         libaries offering the maximum possible growth for the heap
+         (break-point).
+
+Requirements of the malloc library
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+We will discuss all the gory details of malloc library in a later section. At
+the moment, we will just get a high level picture of the requirements of the
+malloc library. 
+
+* The malloc library notes down the start of heap when the program starts, and
+  the current break point. It then book-keeps this space and satisfies all the
+  malloc() calls from this region. 
+* When there is no more contiguos space for a new malloc request, the
+  malloc library now increases the break-point using sbrk
+* Malloc will have to now book-keep both the existing memory and the new-found
+  memory
+* When sufficient memory is freed, malloc will have to release the memory back
+  to the system. 
+
+While its desirable to just hold the current memory requirement of the
+application and release excess memory to the kernel, this will impact
+performance of the application, as frequent interaction with the kernel for
+memory related operations involve context switches between kernel-mode and
+user-mode. So, the malloc library will have to take a judicious call between 
+making system-calls frequently and holding excess memory.
+
+
+
+Further Reading
+---------------
+
+* man proc
+* http://en.wikipedia.org/wiki/Page_table[Wikipedia article] on page-tables
+
+
+////
+
+Typed , dot know where to fit
+
+Its an interesting study on how 
+
+Although we theoritically call code, data, stack and heap, all of these are
+from the same available addressing range. Linux offers a process, pages of
+memory, and lets the process pick the permissions for every page. Each page
+could 
+
+theoritical addressable meoryThe addresseable memory starts from 0x0
+and 
+
+There are 2 system-calls available which 
+malloc makes use of - sbrk() and mmap().
+
+code Segment
+~~~~~~~~~~~~
+
+The code segment comes to us as part of the build environment. When we 
+compile our program the compiler/linker take care of generating the 
+code-segment for our program. And when we execute it, the loader
+just lays down the code-segment ready and magically starts our program
+from the main() function. As mentioned, the article doesn't discuss
+this any further.
+
+The normal c programming in linux doesn't make use of any segments
+while addressing - 
+
+String literals in our program might be placed in the code-segment or 
+in the data-segment. String literals are by standard, read-only
+
+
+////
