@@ -1,0 +1,280 @@
+Rich Dad and Poor Dad
+=====================
+
+Introduction
+------------
+
+I read a book - "Rich Dad, Poor Dad" by Robert T. Kiyosaki. This is a great
+book to start for anyone (or read anytime in your life, even if you are an
+finance expert!) to get enlightened financially.
+
+The author's own father, referred as Poor Dad, is a Ph.D and led a very
+commonplace life financially and represents most of us, who just believe,
+studying hard, getting good academic grades, getting a good job is the way to
+lead a successful life. The author's friend's father, referred as Rich Dad, is
+a school dropout, but led a brilliant life financially.  The author recounts a
+lot of advise given by his Rich dad and contrasts it against that of his poor
+dad, and also sheds a lot of light on many things we need to know. I strongly
+recommend reading this book.
+
+In this article, I just want to share, (which sometimes repeat what is 
+already in the book), a lot of rich-dad/poor-dad behavior patterns that
+I have come across, which i can map to what is said in the book. 
+
+Disclaimer
+----------
+
+I am just liberally borrowing the term from the book, and just sharing my
+interpretation, views and understanding. This may not exactly match what is
+expounded by the book.  And importantly, I am no expert :) And it is now a
+personal first-hand revelation to me, that one can appear to preach quite well,
+without having to practise it first :) Ignore the messenger and just take the
+message.
+
+Patterns
+--------
+
+Any physicst will tell us that the rainbow in an infinte gradation of colors
+and we just pick seven colors in this - VIBGYOR for our convenience, to refer
+to the spectrum. Similarly the rich dad and poor dad terms are behavior
+patterns that represent two extremes. We all have some behaviors of rich dad
+and some behaviors of poor dad in us. The article is to highlight these
+behaviors in us.  Hopefully we move towards being a rich dad in our lives
+and live an enriching and abundant life.
+
+They begin with the same resources
+-----------------------------------
+
+Our hypothetical rich dad and poor dad, both begin with exactly the same
+resources as they start on thier career. They get placed on the same job, they
+earn the same fresherman's salary and have little other income. However, the
+rich dad's behavior makes him end up live a rich life, while the poor dad seems
+to always eternally be stuck up being poor. Importantly rich dad is rich because
+of choices he made, while poor dad is poor because of choices he made (or
+choices he did not make). This is the heart of the message.
+
+The Differences
+---------------
+
+.Rich Dad Vs Poor Dad
+[cols="2h,5,5",options="header"]
+|====================
+| Behaviour  | Rich Dad   |  Poor Dad
+
+| Responsiblity | 
+Rich Dad believes generating wealth is in his hands. He is willing to learn
+ways to earn his wealth and to control his expenses.
+|
+Poor Dad blames his external circumstances for keeping him poor. He always
+expects his boss/company to pay him more, his country and law-makers to be more
+considerate of him. And he firmly belives all his expenses are inevitable for a
+person in his shoes.
+
+| Knows Compounding | 
+Rich dad is aware of what is compound interest and how it plays an important 
+role in his financial life. He knows his savings, loans and inflation grow
+at a compounded rate.
+| 
+Poor Dad learnt about compound interest in 8th grade at school and long since
+forgotten about it. He hears terms like inflation-rate, loan-interest-rate
+or CAGR, but is unable to correlate to P(1+r)^n^ that he learnt in school.
+
+| Invests early |
+Rich dad realizes that his money works best, when given more time and thus
+invests early. He knows that n sits in the power of the compound interest
+formula and is equally important if not more, than the rate of interest.
+|
+Poor dad doesn't understand significance of time, and always chases only 
+the interest-rate, hoping this will multiply his money. He keeps liquidating
+his investments in short periods.
+
+| Willing to learn about Finance |
+Rich dad knows that he must be aware of personal finance and spends time to
+understand each concept and takes action after learning these.
+|
+Poor dad believes personal finance is like walking and just happens for 
+everybody.
+
+| Wants to understand any product |
+Rich dad wont enter a financial product, unless he fully understands how
+it works. He would be circumspect, when a product claims to offer a better
+returns than a simple bank's deposit. He would like to know how the money
+multiplies in an instrument, by using his common sense. 
+| 
+Poor dad just feels if everyone around him is going by a product, then
+the product is the nice thing to put his money in.
+
+| Personal Ownership |
+Rich dad knows that ultimately he is responsible for his decisions. He 
+listens to media, friends on how each product has performed in the past
+and gets recommendations. But he does his due diligence and knows he 
+is the only person responsible for his choice of investments.
+| 
+Poor dad is aghast at how his truest friends could have made him invest
+in the lousy stocks/mutual-funds. He is convinced that the world no
+longer has true, honest people.
+
+| Familiar with tools to calculate |
+Rich dad is fairly familiar with a tool of his choice - an internet site,
+a spreadsheet program, a calcuator which he can make use of to arrive 
+at the returns rate of any deal. He regularly uses this to check for himself
+on the numbers published/heard from various sources. His regularity in 
+checking has given him an off-hand comfort that at 8%, money doubles in 9 years
+and at 9% money doubles in 8 years. He knows however, intuition is always
+dangerous and he swallows only after verifying in his tool.
+| 
+Poor dad has no clue on how to check the returns of a deal. He just belives
+the number published in papers. He hopes the auditors whoever publish these
+numbers know what they are doing. He thinks his uncle made a stunning profit
+by selling his house for 2C, which he purchased for 1L. He is oblivious
+of the fact that this was purchased 60 years back, and that this significantly
+matters in deciding the worth of the deal.
+
+| Understands what is a asset |
+Rich dad knows what is a asset - An asset is something which puts/can put money
+in his pocket, at a rate greater than his purchase value and inflation.
+| 
+Poor dad confuses between asset and liability. He believes anything he 
+has paid money to acquire is his asset. He is unaware, when he buys any
+product, of the recurring expenses that would be involved to keep it and
+its depreciation.
+
+| Expands his assets |
+Rich dad believes that, while he gets his salary, it would be always good
+to build assets, which will supplement his regular income.
+|
+Poor dad doesn't realize that one needs to build assets. He thinks his 
+salary is enough for his working life and the statutory funds like
+employee provident fund, gratuity is enough for his retired life.
+
+| Financial Goals |
+Rich dad knows that there are many events in life, that need money. And a 
+good deal of them are completely well predictable events both on their
+time of occurence and amount required for the event. He calcuates their
+estimated values to a reasonable accuracy using scientific methods and plans to
+meet those expenses from a early age, by investing towards them.
+|
+Poor dad just lives on his salary every month, and is stumped by events in
+life, that seem to suck all his money abruptly without notice. He for instance,
+squarely blames the government and greedy college administrators for making
+education of his kid so astronomically high and impossible for
+poor middle-class people like him.
+
+| Has his priorities right |
+Rich dad knows which things are dear to him and in which priority. For 
+example, he places emergency fund, retirement corpus, kids education, corpus
+to start his cherished dream-project, as his foremost financial priorities.
+Things like a house, car come next. When he comes across a new cool gadget, he
+realizes that instinctive buying will jeopardize his important goals and
+stays away. Interestingly, this knowledge empowers him and he is no longer 
+afflicted by the craving to own cool things.
+| 
+Poor dad has no clue on his priorities. He is unaware that one has to think
+about and explicity set priorities. He gets carried away by the new stunning
+new phone that gets released and the pouring reviews on how this phone is
+worth its money. He concludes that buying a gadget is perfectly okay as
+its just one-third of his take-home salary! Interestingly, poor dad always
+has this unsatiated craving after every gadget wears off in its novelty.
+
+| Life Insurance |
+Rich dad doesn't confuse insurance and investment. He picks a term insurance
+and arrives at the insurance amount required to protect his dear ones in a 
+mathematical manner.
+| 
+Poor dad just belives insuring without getting his premiums back is completely
+stupid. He picks an endowment and a unit-linked plan from a very respected and
+popular insurance company, which he is sure, wont cheat on poor people's money.
+He ofcourse can't afford to insure to the real requirement and just purchases
+a plan that can fit his income and current expenses and thinks he has did
+his best on this front.
+
+| Other insurances |
+Rich dad knows he has to insure his health and unforseen disabilities. No one
+can control fate. He also knows that insurance companies shy away from issuing
+insurances as one gets older and acquires general age-related issues. So, he
+starts on a good inflation adjusted health insurance plan right from his early
+age. He has a group insurance from his employer too which he always uses first
+but also continues his personal insurance.
+|
+Poor dad believes he is a disciplined driver and disabilities insurance is not
+for people like him. He is already covered for health by his employer and 
+feels an extra insurance is just for paranoics.
+
+| Hobbies |
+Rich dad's habit of carefully planning his finances, gently rubs on other
+aspects of his life too. He spends a lot of personal moments contemplating on
+what makes him happy from within. He pursues his hobbies and knows anything in
+life needs time and money. He plans for augmenting his hobby with right
+gadgets. He gradually moves on from a amatuer to a serious hobbyist. People
+around him are awed. But that is just secondary. His biggest pleasure is his
+heart soaring at doing what it loves to do.
+| 
+Poor dad, just looks around at what is currently hip. He dabbles at a camera,
+at a skating shoe, with a tennis racket. He feels, getting the fun of all this
+is just a step away. But is confounded at how idiotic things are after he 
+tries them and wonder how anyone could consider this fun. He is oblivious of 
+the piling stuff in his home and the dent they are making in his purse. He 
+doesn't get rid of them too. He is going to try them someday, when he gets
+"time".
+
+| Learns taxes and law |
+Rich dad belives that one has to actively know about taxes and relevant law and
+a sound first hand knowledge of this is central to his wealth building. This
+is more important than the trignometry or calculus he leart at school and 
+college. Although not as complex, he knows he has to invest time and effort 
+in knowing this, as they are quite vast and unfortunately there is no simple
+text book that explains them accurately from scratch in plain English.
+|
+Poor dad prides himself on being one of the first in his class to understand
+how to read clark's logarithm tables and do calcuations in his science
+experiment class. He has helped his fellow mates on the eve of exams in
+teaching boyle's law, avagadro's number. But learning law and taxes - come-on,
+they are for lawyers and charted accountants. He shrugs it off.
+
+| Knows about various Finance Instruments |
+Rich dad is aware of the choices one has on investing, ranging from fixed
+deposits, recurring deposits, physical gold, electronic gold, bonds,
+debentures, Fixed Maturity plans, debt-based-mutual funds, equity-mutual funds,
+equity, derivatives, real-estate, forex and many more. He is able to
+distinguish between debt and equity. He knows about the tax implications of
+each product. He knows the risk invovled with each product. While he wouldn't
+invest immediately, he is open to listen to new products on how they work. 
+| 
+Poor dad thinks fixed deposits, buying a house and plot are all there is
+to investing. He is carried away by the beautifully articulated sales person
+on a new multi-level marketing scheme and is convinced this is the mantra
+of the rich, and he missed being rich till date because, he was not in this.
+
+| Loans |
+Rich dad believes in the common sense of economics - "In any economy, the 
+lending interest rate will be higher than the savings rate". Thus he always
+stays away from loans, unless he is completely convinced that the loan is
+made cheap by factors outside of the loan like tax benefits. He knows 
+getting into a loan is just detrimental to his financial well-being.
+| 
+Poor dad just loves sellers who offer EMI schedules for their products. He
+thanks them for making things "affordable" for people like him. He is happy
+that the seller has the option of extending the time period and reduce the per
+month EMI. He believes, as long as the EMI amount is within his current
+take-home minus current expenses, he is all set for the loan. 
+
+| Retirement |
+Rich dad understands retirement - Its the time point in his life, where he 
+has built enough assets that would take care of him and his dependants
+by themselves for the rest of life for his chosen life-style. He plans
+for it and retires quite early in life. He then completely pursues his
+heart's call beyond this point. He has already identified this call in 
+his earning-period and has been already building/spending time on it.
+Just that there is no longer the compulsion to stay at his regular work
+any longer.
+| 
+Poor dad thinks retirement is simply the age stipulated by law-makers till
+which one person works as a regular employee in an organization. He hopes
+working till this age, will help him live a king-sized life afterwards
+and that he can pursue all the joys he is missing in his work-life post
+retirement. But he is petrified at reality once he approaches this age.
+He is mortified at how a honest, hard-worker like him is being treated
+so unjustly by life and the society.
+
+|=============
+
