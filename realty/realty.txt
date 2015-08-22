@@ -1,0 +1,164 @@
+Asset or Liability?
+-------------------
+
+I was chatting with a friend, who mentioned about a real-estate investment the friend had made recently. I felt like dissecting and demystifying a few likely-missed points in such common deals. My intent here is not to encourage or deter the reader to make similar deals, but I hope this article, shows the reader some picture that might likely be missed in the eagerness to clinch real estate deals.  The details of the actual deals are not accurate - for i dont know the actuals myself, except for the ball park values given by my friend. But the point of the article, is to show the common pitfalls missed by most people and to serve as a guiding light, so the exact details doesn't really matter.
+
+Original inputs from my friend
+------------------------------
+
+I am not disclosing my friend's name, the seller/promoter names nor the location of the land, but other details are what i heard from my friend. 
+
+"I am buying a property promoted by ABC promoters. This is a 1453 sq feet plot about ~15 kms away from city limits. We are buying it at Rs. 1049 per sq. feet. This comes out to about 15L. we are pooling about 30% from our hand, and going for a loan for the rest at 10.25%. We are planning this for our kids education"
+
+Working out the deal
+---------------------
+
+I didn't want to probe further with my friend, beyond what the friend wanted to share above. So, i am going to guess a few details of the deal. I will mention these as we work out.
+
+Actual Inputs
+~~~~~~~~~~~~~
+
+.Inputs
+|=======================
+|No of sq feet        |                       |    1,453
+|Price/sq.feet        |                       |    1,049.00
+|Total Land Price     | No-sq.ft * rate/sq.ft |15,24,197.00
+|Down payment percent |                       |       30%
+|Down payment         | Total price * 30%     | 4,57,259.10
+|Remaining            | Total - Down payment  |10,66,937.90
+|EMI interest rate    |                       |    10.25%
+|Loan Tenure          |                       |   10 Years
+|=======================
+
+Workings
+~~~~~~~~
+
+Lets start working out from here. First the EMI itself. We will use PMT formula in excel. We will use the per-monthly rate, no of periods in months.
+
+----
+EMI value  =PMT(rate,nper,pv) = PMT(0.008164846,120,-1066937.90) =  13,980.48 
+----
+
+Next, I will assume that the total expense made towards purchase of this house is about Rs. 10,000. This includes stuff like loan processing fee, lawyer verification fees and such like. I am pretty sure that the one-time expenses are much more than this, but let me take a conservative approach. 
+
+----
+One time expenses  = 10,000
+----
+
+Next, I will assume that 50% of the purchase value is shown in white(amount of registration), and remaining in black(just given to promoter without mentioning it in registration). And we have to pay a tax of 5% on the registration value. This registration tax is another one-time expense too.
+
+----
+Percentage white           50%
+Registration tax           5%
+Total Registration    = Total-Value * Percentage-white * Tax-Rate = 38,104.925
+----
+
+Thus total amount spent from hand is the down payment, one-time expense and registration tax. This comes to
+
+----
+Downpayment                 4,57,259.10
+One-time Expense              10,000
+Registration Tax              38,104.925
+                           -------------
+Total upfront money spent   5,05,364.025
+----
+
+And then we pay EMI of 13,980.48 for the next 10 years. Finally the land is our own!
+
+Benchmarking the deal
+---------------------
+
+To get a hang of the deal, lets compare it with simple savings. We will not get into where we invest - this could be anything (Fixed/Recurring deposits, bonds, mutual funds, stocks, gold) but we will assume varying post-tax return rate from 8% to 14%.
+
+What we have to invest
+~~~~~~~~~~~~~~~~~~~~~~~
+
+* We invest about 5,05,364.025 upfront 
+* We also invest 13,980.48 for the next 10 years. 
+* Post 10 years, we invest returns of the one-time investment and returns of recurring-investment, both as one-time investment from on.
+
+We will use simple compound interst formula for calculating one-time-investment returns, while use funciton FV to compute the result of our recurring monthly investment. 
+
+I have shown here how much our investment works out. Each column shows for a given returns rate. The first row shows the initial-investment returns after 10 years. The next row shows the recurring investment returns at the end of 10 years. The third row shows what we will have after 10 years in total, which is the sum of first 2 rows. Then onwards, we have the returns after 15 years, 20 years and 30 years from now.
+
+.Returns from savings
+[options="header"]
+|=======================
+| Interest Rate                 |          8      |       9        |      10          |      11         |       12       |      14
+| Initial Investment Returns    |   10,91,043.03  |   11,96,380.44 |    13,10,784.13  |   14,34,941.22  |   15,69,583.95 |   1l,873,496.28   
+| RD Returns                    |   25,18,223.68  |   26,52,357.71 |    27,94,192.52  |   29,44,153.74  |   31,02,688.35 |   3l,447,377.90 
+| Total Returns after 10 years  |   36,09,266.70  |   38,48,738.15 |    41,04,976.65  |   43,79,094.96  |   46,72,272.31 |   5l,320,874.19 
+| After 15  years               |   53,03,196.90  |   59,21,760.71 |    66,11,105.94  |   73,79,029.67  |   82,34,140.24 | 1,0l,244,888.75 
+| After 20 years                |   77,92,136.11  |   91,11,362.88 |  1,06,47,252.22  | 1,24,34,094.12  | 1,45,11,368.57 | 1,9l,725,658.20 
+| After 30 years                |  168,22,637.42  | 2,15,69,909.51 |  2,76,16,230.18  | 3,53,05,627.79  | 4,50,70,108.07 | 7,3l,127,380.50 
+|=======================                                                                                  
+                                                                                                           
+Simply put, even at a conservative 8%, one can get about 36L in 10 years, and 53L in 15 years, 77L in 20 years and hey 1.6C in 30 years. Just see the table for yourself for the other interest rates.
+
+Is the real-estate deal worth it?
+---------------------------------
+
+This is just a plot, so there are no IT benefits. If you are gonna want benefits, you have to build a house here and rent it out! The loan itself runs for only 10 years. So i will presume no one really wants to live in this far-away plot for the next 10 years. I would be circumspect on whether we will get a electriciy connection here in the next few years in the first place.
+
+May be the real estate proponents will point out here that land will apprecicate faster. I dont know. But it has to better appreciate much faster than this 36L in the next 10 years for it to minimally break even with a simple 8% returns-investment! May be there is a hyper-super infrastructure project that will come up nearby, which will make land prices sky-rocket, and/or this land comes under city corporation limits. Hopefully! Remember, even if we sell this 15L land for 2C after 20 years, we have effectively made near about 14%. 
+
+My opinions
+~~~~~~~~~~~
+
+Real-estate is a good investment vehicle. But there is no free lunch. It has
+its own pitfalls. Some are
+
+* Legal issues. Its quite tough to get a clean chit on a property. And to get
+  all necessary govt documents is not easy and involves many follow-ups with
+  different people.
+* Encroachment! You just hope no one slowly encroaches on your free land. I have
+  heard stories, where local goons simply create encroachment issues just to get
+  whatever they can get out of the selling owner!
+* When you want to sell, you have find a buyer for the price that you demand.
+  This is not easy, and a laborious process. If you are hiring a real-estate
+  broker, he cooly walks away with a 1% of your sale value.
+* Lets say we are at 20 years and we managed to find a buyer for 1.9C (our 14%
+  return!). Again, the buyer needs to register and pay registration tax. I am not
+  sure, how much this buyer will be willing to register the land for. If we
+  assume the same 50%, then we have to deal with a black money of 0.95C! That to
+  me is a nightmare. We can't spend this on anything that can be tracked.
+  Typically people rotate this back into real-estate, buy hey, if we need this
+  amount to finance something other than real-estate, then we have to start
+  dancing around with wild ideas.
+* Wealth tax. If your land value increases beyond 30L, then you have to pay
+  wealth tax of 1% on this amount.  I am not sure at which point this land
+  would come under the wealth-tax bracket.  But it is going to chirp away the
+  returns once it hits there.
+* Real-estate attracts capital gains tax if you dont re-invest back in real
+  estate once you sell. Subtract this from your returns.
+* After 15 years, if you need say 40L, you are stuck. You can't sell a portion 
+  of your land to the extent of just 40L! Its either an all-on or no deal!
+
+While i may go in for this deal, if i had a cash of 15L in hand, i feel going
+into this deal on a 10.25%-10 year loan is kind of betting too much on the land
+to appreciate. I am mostly a pro-equity person. I dont abhor real-estate,  but
+i feel, a good real-estate deal should give me upwards of 14% for all the
+hassles involves in it and for it to make financial sense. Otherwise, equity
+wins hands down. 
+
+While equity has its own pitfalls too, here are some benefits of taking the
+equity/mutual-fund route.
+
+* You dont pay an EMI of 13K like above, but you are investing 13K. That's a 
+  lot of mental peace.
+* If salary is the top(or only?) income in your balance sheet, then your best
+  invesment style is to save the excess in every month on a monthly basis
+  and leverate the cost-price averaging of monthly investing, instead of 
+  hoping the timing of your one-time ultra-big investment!
+* If you need only a part of your investment at 20 years, you liquidate exactly
+  the x%, and let the remaining continue to multiply. 
+* Your investments, while depends on market conditions, are completely 
+  safe from issues like robbery/safe-paper-storing/encroachment/embezzlement
+* You can track what your net-worth on each day is quite accurately
+* You can do your home-work on where to invest at the complete comfort of
+  sitting in your home
+  
+I really wish for my friend and friend's kid's education! I hope the land
+appreciates as hoped and outbeats investment-value and inflation comfortably.
+Only time will tell.
+
