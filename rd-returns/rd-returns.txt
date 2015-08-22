@@ -1,0 +1,50 @@
+Returns from a Recurring Deposit
+================================
+
+:toc:
+
+Introduction
+------------
+
+This just shows the graph assuming you invest 10K in any instrument
+per month. It could be a bank rd, mutual fund SIP, whatever. 
+The point is show the effect of the *T-I-M-E* in your investment.
+
+The Graph
+----------
+
+This plots the months you invest versus amount invested and the returns
+assuming a 8, 9 and 10% compounded annual returns. The investment is obviously
+linear, while the returns are exponential :), which is where *T-I-M-E* speaks.
+
+image::rd-returns/rd-returns.png[]
+
+In case you didn't notice the significance of the graph, here is what it speaks
+in simple english: If you stay invested for just 5 years or 60 months, your
+investment is about 6L and u get anywhere from 7.2 to 7.6L, but hey if you are
+invested for 10 years (120 months), you have invested about 12L, but you get a
+handsome 18L to 19.9L (wow!), and if you are invested for about 30 years, you
+invested about 36L, but hold your breadth, you get anywhere from 1.4C to 2C.
+
+Inferences
+----------
+
+To give a real-example, say Tom, Dick and Harry pass out of colleage at age
+24 and start working from 25, and all retire at 60. Tom invests 10K every month
+since his first year of work. Thus Tom keeps investing 10K every month for 35
+years. Dick starts a bit late at 30 years, thus invests for 30 years. Harry
+starts investing very late and starts only when he is 50, thus invests only 10K
+for 10 years. Here are returns of all 3, when they retire at 60, assuming they
+all got 8%, 9% and 10% yearly returns.
+
+.Retirement Corpus
+[options="header"]
+|====================
+| Rate  | Amount Invested  | 8   | 9     | 10   
+| Tom   |    42L           |2.1C | 2.7C  | 3.4C
+| Dick  |    36L           |1.4C | 1.7C  | 2C
+| Harry |    12L           |18L  | 18.9L | 20L 
+|====================
+
+Invest early .. and good luck :)
+
