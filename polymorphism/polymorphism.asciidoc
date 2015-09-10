@@ -141,8 +141,8 @@ really assembled into the code by the compiler is simply
 
 * Get the v-ptr. This is at the same offset, typically 0,
   no-matter what the actual pointer is pointing to. That
-  is, whether the Bird* at hand is actually a Crow*, 
-  Pigeon* or Eagle*, the first item at offset 0 is a 
+  is, no matter whether the Bird* at hand is actually a Crow*, 
+  Pigeon* or Eagle*, the first item at offset 0 is always a 
   pointer to the v-table of the corresponding class.
 * Get the offset of the virtual function. Say we are 
   invoking bird->fly(), the compiler puts in code, that
@@ -168,8 +168,10 @@ of Bird, but just dont only fly. Ostriches particpate is every
 other Party except FlyingParty.
 
 This problem is typically solved by 2 ways
+
 * Provide a dummy fly implementation for Ostrich. By design,
-  ostriches will never enlist into FlyingParty anywa.
+  ostriches will never enlist into FlyingParty anyway. But
+  the rest of the code compiles and gets moving.
 * Intrduce a hierarchy. Bird has all the common behavior. 
   There there is a FlyingBird class that derives from Bird,
   and declares the fly function in it. All birds that fly
@@ -179,8 +181,8 @@ This problem is typically solved by 2 ways
   FlyingBird*.
 
 Both are not very elegant while work. The latter for example
-gets unwieldy, when there are multiple traits on which birds
-differ from each other.
+builds into an unwieldy inheritance matrix, when there are multiple traits on
+which birds differ from each other.
 
 GO's approach
 --------------
