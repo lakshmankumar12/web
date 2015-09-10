@@ -202,7 +202,55 @@ functions. There is no explicilt mentioning of Crow or any
 actual bird, implementing the Bird/FlyingBird interface.
 
 When the go-compiler observes a call to FlyingBird's enlist
-function from a particular object like crow:
+function from a particular object like crow, it validates
+the interface conformance and if acceptable, it converts
+the object reference into the interface reference.
 
+----
+type FlyingBird interface {
+      fly()
+}
+type FlyingParty {
+    ...;
+}
+func (p FlyingParty) enlist(fb FlyingBird) {
 
+}
+...
+...
+flyingParty.enlist(crow);  // Automatically derived interface implementation!
+----
+
+But how the magic works?
+------------------------
+
+In c\+\+, the compiler is explicitly told of the inheritance relations,
+which helps the compiler prepare virtual tables upfront and ensure the
+function offsets of every funciton in the v-table is the same for 
+Base class and all derived classes.
+
+But in go, if a class can inherit any number of interfaces and each 
+interface has lists of functions, then how does the v-ptr/v-table 
+trick work here?
+
+It turns out that its still possible with the go-approach with a bit of
+a small overhead.
+
+Whenever a class is found to implement a interface (and this class's
+implementation is required), for example, at the moment, where the first
+call to a interface is encountered - in this case the passing of a crow
+to a FlyingParty.enlist() function, the go-compiler prepares the virtual
+table. But in go, virtual tables are associated to not just the class 
+as in cpp, but to a (class, interface) pair. Every (class, interface)
+pair has one v-table. In cpp, whenenver a Base class is taken, the compiler
+just passes one pointer. In go, whenever a interface is taken, actually 2
+pointers are passed. The first is the actual object (the crow), and the 
+second is the poitner to the v-table of the (crow,FlyingBird) pair. This
+is required in go, because a class can implement many many interfaces
+that will automatically inferred and its not possible to keep a single
+v-ptr as part of the crow object itself.
+
+Now onwards, calling the right fly function is same as in cpp. Just that
+the v-ptr is explicilty passed instead of expecting to be found within
+the actual object. 
 
