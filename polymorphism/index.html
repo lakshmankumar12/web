@@ -616,7 +616,10 @@ other Party except FlyingParty.</p>
 <li>
 <p>Provide a dummy fly implementation for Ostrich. By design,
 ostriches will never enlist into FlyingParty anyway. But
-the rest of the code compiles and gets moving.</p>
+the rest of the code compiles and gets moving. We may even
+put an assert in Ostrich::fly() so that if it ever gets
+called inadvertently, we know, at the risk of the assert
+bomb lying in code!</p>
 </li>
 <li>
 <p>Intrduce a hierarchy. Bird has all the common behavior.
@@ -680,13 +683,10 @@ func (p FlyingParty) enlist(fb FlyingBird) {
 flyingParty.enlist(crow);  // Automatically derived interface implementation!</pre>
 </div>
 </div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_but_how_the_magic_works">But how the magic works?</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_but_how_the_magic_works">But how the magic works?</h3>
 <div class="paragraph">
-<p>In c+\+, the compiler is explicitly told of the inheritance relations,
+<p>In c\++, the compiler is explicitly told of the inheritance relations,
 which helps the compiler prepare virtual tables upfront and ensure the
 function offsets of every funciton in the v-table is the same for
 Base class and all derived classes.</p>
@@ -721,11 +721,23 @@ the v-ptr is explicilty passed instead of expecting to be found within
 the actual object.</p>
 </div>
 </div>
+<div class="sect2">
+<h3 id="_the_elegance">The elegance</h3>
+<div class="paragraph">
+<p>Go&#8217;s approach is very elegant - as it relieves the programmer of the need
+to desing a carefully crafted inheritance relationship. We define crip
+interfaces that are fat only to the extant they need to be and define
+API&#8217;s that accept interfaces they need. For example, FlyingParty doesn&#8217;t
+need anything beyong a fly() function to be implemented and hence it
+takes a interface FlyingBird that is exacly just a fly().</p>
+</div>
+</div>
+</div>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-09-10 10:35:49 PDT
+Last updated 2015-09-10 12:02:07 PDT
 </div>
 </div>
 </body>
