@@ -1,0 +1,208 @@
+Polymorphism Explained
+=======================
+
+In this article, I try to explain how polymorphism is typically implemented in
+c++ and go.
+
+Example Application and Problem Domain
+--------------------------------------
+
+Say we have a class of birds. All birds have a few common behaviors captured in 
+a base class as show below.
+
+----
+class Bird
+{
+  public:
+    virtual void walk() = 0;
+    virtual void fly() = 0;
+    virtual void eat() = 0;
+    ...;
+    virtual ~Bird();
+}
+----
+
+And we have the actual birds.
+
+----
+class Crow : public Bird
+{
+  public:
+    ...;
+    virtual void walk();
+    virtual void fly();
+    virtual void eat();
+    ...;
+    virtual ~Crow();
+}
+----
+
+Just as crow, say there are Pigeon and Eagle.
+
+There is another FlyingParty class in our application.
+
+----
+class FlyingParty
+{
+  public:
+    void enlist(Bird *bird);
+    void start();
+    ...;
+  private:
+    std::vector<Bird*> partying_birds;
+};
+----
+
+The enlist function adds the said bird into its internal vector. We
+dont show its implementation here, but here is the FlyingParty::start's
+implementation.
+
+----
+void FlyingParty::start()
+{
+  std::vector<Bird>::iterator bird = partying_birds.begin();
+  for (;bird!=partying_birds.end();bird++)
+  {
+    ...;
+    bird->fly();
+    ...;
+  }
+}
+----
+
+In the above, we see Polymorphism in action. The FlyingParty::start() function
+doesn't really know about which bird its acting upon, but by magic, the
+bird->fly() calls the right fly() function, depending on the bird at the
+moment.
+
+How the magic is done
+~~~~~~~~~~~~~~~~~~~~~
+
+When the compiler looks at Bird class, and observes that there is atleast
+one virtual funciton in it, it knows Bird is now a polymorphic class, and
+prepares a v-table for this class. This v-table is an array of function
+pointers, each pointer pointing to the implementation of the virtual
+fucntion for that class. Since Bird itself is a abstract base class, as
+it has atleast one pure virtual function, its v-table may have NULL
+pointers (and these functions will never be accessed - an instantiable
+class must provide a implementation for the pure virtual functions).
+
+Every class that derives from Bird is automatically a polymorphic class
+and will have its vtable. The magic of Polymorphism works because, the
+offset of every function in the vtable is the same and this is dictacted
+by the definition of the Base class. Here is the same shown pictorially.
+
+----
+
+Bird's v-table                     Crow's v-table
+
++-----------------------+            +------------------------+
+| ptr to Bird::walk()   |            | ptr to Crow::walk()    |
++-----------------------+            +------------------------+
+| ptr to Bird::fly()    |            | ptr to Crow::fly()     |
++-----------------------+            +------------------------+
+| ptr to Bird::eat()    |            | ptr to Crow::eat()     |
++-----------------------+            +------------------------+
+| ....                  |            | ....                   |
++-----------------------+            +------------------------+
+| ....                  |            | ....                   |
++-----------------------+            +------------------------+
+| ptr to Bird::~Bird()  |            | ptr to Crow::~Bird()   |
++-----------------------+            +------------------------+
+
+Pigeon's v-table                     Eagle's v-table
+
++-----------------------+            +------------------------+
+| ptr to Pigeon::walk() |            | ptr to Eagle::walk()   |
++-----------------------+            +------------------------+
+| ptr to Pigeon::fly()  |            | ptr to Eagle::fly()    |
++-----------------------+            +------------------------+
+| ptr to Pigeon::eat()  |            | ptr to Eagle::eat()    |
++-----------------------+            +------------------------+
+| ....                  |            | ....                   |
++-----------------------+            +------------------------+
+| ....                  |            | ....                   |
++-----------------------+            +------------------------+
+| ptr to Pigeon::~Pigeon()           | ptr to Eagle::~Bird()  |
++-----------------------+            +------------------------+
+
+----
+
+Note that the v-table is created, one per class definition. When a
+object of a polymorphic class is instantiated, each object at
+creation time, has a pointer to its v-table. This pointer, called
+as the v-ptr is typically the first member of the object. Crow
+objects point Crow's v-table, Pigeon object's v-ptr point to
+Pigeon's v-table and so on. This is arranged by the compiler at
+the construction time of each object (One of the behind the
+scene actions done besides calling the constructor!). Now, 
+when a invocation to a virtual function is done, what is
+really assembled into the code by the compiler is simply
+
+* Get the v-ptr. This is at the same offset, typically 0,
+  no-matter what the actual pointer is pointing to. That
+  is, whether the Bird* at hand is actually a Crow*, 
+  Pigeon* or Eagle*, the first item at offset 0 is a 
+  pointer to the v-table of the corresponding class.
+* Get the offset of the virtual function. Say we are 
+  invoking bird->fly(), the compiler puts in code, that
+  gets the offset of fly() function from the v-table. 
+  No matter whether its Crow/Pigeon/Eagle the fly()
+  function is at the same offset!
+* Call the function thus obtained.
+
+Voila! The right fly() is called. 
+
+In future, if we introdude a class Duck, that derives from
+Bird, our FlyingParty class will still work (with just re-linking)
+as FlyingParty class works on the premise that all Bird objects 
+will implement a fly() function and the FlyingParty::start() will
+invoke the right fly() function.
+
+So, haven't we solved all the problems?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+All goes well, until our application has to handle Ostriches.
+Alas, Ostriches can't fly! Ostriches share every other behavior
+of Bird, but just dont only fly. Ostriches particpate is every
+other Party except FlyingParty.
+
+This problem is typically solved by 2 ways
+* Provide a dummy fly implementation for Ostrich. By design,
+  ostriches will never enlist into FlyingParty anywa.
+* Intrduce a hierarchy. Bird has all the common behavior. 
+  There there is a FlyingBird class that derives from Bird,
+  and declares the fly function in it. All birds that fly
+  derive from FlyingBird, while Ostrich derives from Bird
+  (or a sibling level class NonFlyingBird). All other 
+  Party class enlists Bird*, while FlyingParty enlists
+  FlyingBird*.
+
+Both are not very elegant while work. The latter for example
+gets unwieldy, when there are multiple traits on which birds
+differ from each other.
+
+GO's approach
+--------------
+
+Go doesn't bother explicitly defining inheritance relations.
+Classes just define their functions, while we define 
+interfaces, which are just collection of functions that 
+will be expected of the interface. A class implementing 
+a interface or not (that is if a class reference can decay
+implicitly into the interface reference) is auto-decided
+by the compiler. If the class implements all the functions
+mentioned in the interface, the class is of the interface
+type, otherwise its not.
+
+For example, in the above example, we define Crow, Pigeon
+and Eagle. The Bird, FlyingBird are all interfaces which 
+simply declare the function signatures of its constituent
+functions. There is no explicilt mentioning of Crow or any
+actual bird, implementing the Bird/FlyingBird interface.
+
+When the go-compiler observes a call to FlyingBird's enlist
+function from a particular object like crow:
+
+
+
