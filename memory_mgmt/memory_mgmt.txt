@@ -20,8 +20,8 @@ Review of common c programming knowledge
 Before we dive into depths of memory management, lets just review what we read
 as part of c-classes in school/under-graduation/graduation.
 
-All C programmers *should* be already knowing this, but neverthless the reader
-is asked to skim through this to lay down the terms further used in the
+All C programmers *should* be already knowing this, but nevertheless the reader
+is asked to skim through this to lay down the terms that are used in the
 rest of the article. If the contents of this review section sounds unfamiliar
 to you, you should stop reading this article. This article is not for you yet.
 You should gain some c programming experience and come back later.
@@ -37,7 +37,7 @@ program-file can be done simultaneoulsy. Each of these processes run
 independant of each other.
 
 At school, we learnt that each process has 4 segments. A brief explanation
-of each segment is given beside.
+of each segment is given below.
  
 . Code Segment
 +
@@ -61,15 +61,13 @@ on the run-time needs of the process.
 
 Each process instantiated from the same program file might share the code
 segment, but will have its own data, stack and heap segments. This ensures 
-that every process runs privately without tramplng on each other. Threads
+that every process runs privately without trampling on each other. Threads
 or Light Weight Processes are entities that just have a private stack 
-but can access the same memory. Since ASR5k implementation doesn't make
-use of threads/LWP, this article doesn't discuss it further.
+but can access the same memory. We dont discuss threads/LWP much here.
 
 The article will soon explain each of these segments of a c-program in finer
 detail by dissecting the executable we get and the process we run,
-familiarizing with a few tools as we do this activity, but lets just continue
-with our review.
+familiarizing with a few tools as we do this activity.
 
 Lets take this sample program
 
@@ -127,7 +125,7 @@ printf() or scanf() does.
 Dynamic memory
 ~~~~~~~~~~~~~~
 
-We use the following functions to meet the dynamic memory needs of our
+We use the following functions to meet the dynamic memory needs of a
 process. Memory obtained via these functions are from the Heap Segment.
 The memory obtained from these functions is to be explicity managed by
 the programmer. In simpler words, when a memory is no longer required,
@@ -231,8 +229,8 @@ Different address locations are used for different purposes - code, stack,
 heap, data.  Among the data, we have read-only data and mutable data. To
 provide for such different needs, linux manages memory in units of *pages*. A
 page is typically 4K in size.  Different systems make different choices. 4K is
-quite a popular choice and is also the choice of Star-OS. The concepts are the
-same for any page size.
+quite a popular choice for many processor architectures and it the size for
+x86 in 32 bit mode. The concepts are the same for any page size.
 
 Not all processes need all the 4G locations to run. In fact, its still 
 considered gargantaun, to consume so much memory for a single process.  Most
@@ -285,7 +283,7 @@ The address map of a process is visible via the /proc/pid/maps file for any
 process. Lets just see one sample output.
 
 ----
-[lakskuma@bgl-mitg-sim64:~]$cat /proc/self/maps
+$ cat /proc/self/maps
 08048000-0804c000 r-xp 00000000 08:01 631493     /bin/cat
 0804c000-0804d000 rw-p 00003000 08:01 631493     /bin/cat
 0804d000-0806e000 rw-p 0804d000 00:00 0          [heap]
@@ -300,7 +298,7 @@ b7fea000-b7feb000 r-xp b7fea000 00:00 0          [vdso]
 b7feb000-b8000000 r-xp 00000000 08:01 566744     /lib/ld-2.3.6.so
 b8000000-b8002000 rw-p 00015000 08:01 566744     /lib/ld-2.3.6.so
 bffea000-c0000000 rw-p bffea000 00:00 0          [stack]
-[lakskuma@bgl-mitg-sim64:~]$
+$
 ----
 
 By using /proc/self, we just got the address-map of the cat process itself.
@@ -311,7 +309,7 @@ The columns are
 +*address           perms offset  dev   inode      pathname*+
 +08048000-0804c000 r-xp 00000000 08:01 631493     /bin/cat+
 
-jnormal]
+[normal]
 The first column tells the range of the address. The next column gives the 
 permission(rwx) and the shared'ness of the page(private/shared). The next
 3 columns are relevant for address'es which are mapped to files - Offset of
@@ -384,20 +382,19 @@ The stack
 We will break our address-range walk in the serial order for the moment
 and go the last range. This range +bffea000-c0000000+ is marked the 
 stack. The stack starts from the high-end and growns downward! This is
-how x86 is designed - the push/pop and call/ret instructions operate
-the stack-pointer thusly. The stack is presently 22 pages long. 
-The stack unlike the heap will automatically grow when it exceeds the 
-current limit. The kernel will detect the stack's need for growth and
-add pages to the stack. However, the stack cannot infintely grow and 
-once the stack's tip neards the end of the previous segment the kernel
-faults the process. 
+how x86 is designed to operate the stack-pointer for push/pop and call/ret
+instructions. The stack is presently 22 pages long.  The stack unlike the heap
+will automatically grow when it exceeds the current limit. The kernel will
+detect the stack's need for growth and add pages to the stack. However, the
+stack cannot infintely grow and once the stack's tip neards the end of the
+previous segment the kernel faults the process. 
 
 The other ranges
 ^^^^^^^^^^^^^^^^
 
 Going by our school education, we have met all the segments of the cat
 program - code/data/stack and heap. However we will have address ranges
-to explore on a real process. Lets take them on. We will cotinue from 
+to explore on a real process. Lets take them on. We will continue from 
 where we left after the heap.
 
 ----
@@ -410,7 +407,7 @@ b7fdf000 b7fe1000 rw-p
 ----
 
 These belong to the libc library. The cat program-file in itself is 
-small. However, since it makes use of the stand-c-library, and links
+small. However, since it makes use of the standard-c-library, and links
 it dynamically, when the cat program is invoked, the loader automatically
 also loads this library along. The library could get loaded in any 
 address range, and it happens to get loaded at 0xb7ea900 in this 
@@ -525,15 +522,15 @@ how big each stack frame is. When the above was run with 4096, 1024 and 128,
 we see that tip of the stack was as follows.
 
 ----
-[lakskuma@bgl-mitg-sim64:~]$./a.out
+$ ./a.out
 Stack begins at roughly:0xbfffebd4
 How fast do u want to die?128
 Segmentation fault
-[lakskuma@bgl-mitg-sim64:~]$wc stack_tip
+$ wc stack_tip
  52386  52386 576246 stack_tip
-[lakskuma@bgl-mitg-sim64:~]$tail -n 1 128_tip
+$ tail -n 1 128_tip
 0xbf80070b
-[lakskuma@bgl-mitg-sim64:~]$
+$
 
 Size   Stack-Tip  
 ----   ---------  
