@@ -141,8 +141,8 @@ really assembled into the code by the compiler is simply
 
 * Get the v-ptr. This is at the same offset, typically 0,
   no-matter what the actual pointer is pointing to. That
-  is, whether the Bird* at hand is actually a Crow*, 
-  Pigeon* or Eagle*, the first item at offset 0 is a 
+  is, no matter whether the Bird* at hand is actually a Crow*, 
+  Pigeon* or Eagle*, the first item at offset 0 is always a 
   pointer to the v-table of the corresponding class.
 * Get the offset of the virtual function. Say we are 
   invoking bird->fly(), the compiler puts in code, that
@@ -168,8 +168,13 @@ of Bird, but just dont only fly. Ostriches particpate is every
 other Party except FlyingParty.
 
 This problem is typically solved by 2 ways
+
 * Provide a dummy fly implementation for Ostrich. By design,
-  ostriches will never enlist into FlyingParty anywa.
+  ostriches will never enlist into FlyingParty anyway. But
+  the rest of the code compiles and gets moving. We may even
+  put an assert in Ostrich::fly() so that if it ever gets
+  called inadvertently, we know, at the risk of the assert
+  bomb lying in code!
 * Intrduce a hierarchy. Bird has all the common behavior. 
   There there is a FlyingBird class that derives from Bird,
   and declares the fly function in it. All birds that fly
@@ -179,8 +184,8 @@ This problem is typically solved by 2 ways
   FlyingBird*.
 
 Both are not very elegant while work. The latter for example
-gets unwieldy, when there are multiple traits on which birds
-differ from each other.
+builds into an unwieldy inheritance matrix, when there are multiple traits on
+which birds differ from each other.
 
 GO's approach
 --------------
@@ -222,9 +227,9 @@ flyingParty.enlist(crow);  // Automatically derived interface implementation!
 ----
 
 But how the magic works?
-------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~
 
-In c\+\+, the compiler is explicitly told of the inheritance relations,
+In c\++, the compiler is explicitly told of the inheritance relations,
 which helps the compiler prepare virtual tables upfront and ensure the
 function offsets of every funciton in the v-table is the same for 
 Base class and all derived classes.
@@ -254,3 +259,12 @@ Now onwards, calling the right fly function is same as in cpp. Just that
 the v-ptr is explicilty passed instead of expecting to be found within
 the actual object. 
 
+The elegance
+~~~~~~~~~~~~
+
+Go's approach is very elegant - as it relieves the programmer of the need
+to desing a carefully crafted inheritance relationship. We define crip
+interfaces that are fat only to the extant they need to be and define
+API's that accept interfaces they need. For example, FlyingParty doesn't
+need anything beyong a fly() function to be implemented and hence it
+takes a interface FlyingBird that is exacly just a fly().
