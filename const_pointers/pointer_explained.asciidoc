@@ -1,0 +1,183 @@
+Casts between const and non-const Pointers
+==========================================
+
+This tries to provide the rationale on why +char $$**$$+ is not implicitly casted to
++const char $$**$$+, especially when all we seem to need is to add a const, which is
+allowed for simple pointers.
+
+Understanding Basic Rules
+--------------------------
+
+Let us first assume that such a cast is allowed and explore the potential
+disasters that might arise when doing so.
+
+Before that, we will brush up the meanings of the various pointers.
+
+----
+char *                         --> a pointer to char
+const char *                   --> a pointer to const char
+char * const                   --> a const-pointer to char
+const char * const             --> a const-pointer to const-char
+char *                         --> a pointer to char
+----
+
+This can be extended to double pointers - and now there are 8 combinations!!
+
+----
+char **                        --> a pointer to pointer to char
+const char **                  --> a pointer to pointer to const char
+char * const *                 --> a pointer to const-pointer to char
+char **const                   --> a const-pointer to pointer to char
+const char *const *            --> a pointer to const pointer to const char
+const char **const             --> a const-pointer to pointer to const char
+char *const *const             --> a const-pointer to const-pointer to char
+const char *const* const       --> a const-pointer to const-pointer to const-char
+----
+
+
+Although the above looks nerdy, its construction gets simpler once we
+understand the following grammer.
+
+Try to decode from right to left.
+
+----
+ (anything)*               - translates to pointer to anything
+ (anything)*const          - translates to const-pointer to anything
+----
+
+So, +(something)$$**$$+ is to be interpreted as +(something$$*)*$$+, which is
++(pointer-to-something)$$*$$+ which finally is +pointer to pointer to something+.
+
+Now go over the above lists and satify yourself that you get the
+interpretations right.
+
+Now, we will understand the difference between const-pointer and pointer-to-const.
+
+We will take a pictorial example. In all the following examples, we will assume
+that pointers take 4 locations, and addreses 0 - 1000 are read-only locations
+and all above 1000 are both read and write locations.
+
+Let us say, we have 2 local variables,
+
+----
+  const char  *p;
+  char *const q;
+----
+
+Let p and q occupy locations 2000 and 2004, and they contain the value 80 and
+1500. This means, p points to 80 and q points to 1500. p is a pointer to
+const-char. So, one can't change the contents of 80 using p. However one can
+still chagne what p points to. That is the location 2000 can be over-written by
+some value other than 80. On the other hand, q is a const-pointer, so, one
+can't change the contents of location 2004. However one change what q points
+to, that is u can over-write the contents of location 1500 .
+
+----
+         +-------+
+    80   |  'a'  |<------+
+         +-------+       |
+                         |
+         +-------+       |
+    1500 | 'b'   |<--------+
+         +-------+       | |
+                         | |
+         +-------+       | |
+(p) 2000 |  80   |-------+ |
+         +-------+         |
+(q) 2004 | 1500  |---------+
+         +-------+
+----
+
+I hope u notice that it is ok for p to have value both 80 and 1500. However it
+is disastrous to let q take up the value 80, as one can try to write to '80'
+using q which is catastrophic. So, the statement
+
+----
+      const char *p;
+      char *q;
+
+ It's ok to say  p = q;
+ but not         q = p;
+----
+
+as , in the second case, q may start potentially pointing to a read-only
+location.  While at first sight we take that the const-pointer is more
+restrictive for operations via it, which indeed it is, what we should also
+understand here, is that, the plain pointer is more restrictive in what it can
+point to! That is, while a const pointer can point anywhere (to both read-only
+and read-write locations), the plain pointer can only point to read-write
+locations. This is enforced by the allow rules of assigment.
+
+The same argument holds good to double-pointers too.. Consider the case
+
+----
+   const char **p;
+   char ** q;
+----
+
+Let us assume the following layout.
+
+
+----
+         +-------+
+    80   |  'a'  |<------+
+         +-------+       |
+                         |
+         +-------+       |
+    1500 | 'b'   |<--------+
+         +-------+       | |
+                         | |
+         +-------+ ------+ |
+    1700 |  80   |<------+ |
+         +-------+       | |
+                         | |
+         +-------+ --------+
+    1800 | 1500  |<--------+
+         +-------+       | |
+                         | |
+         +-------+       | |
+    2000 | 1700  |-------+ |  const char **p;
+         +-------+         |
+    2004 | 1800  |---------+  char **q;
+         +-------+
+----
+
+So, let p and q be allocated the space 2000 and 2004 respectively. Now, say p
+has value 1700  and say memroy 1700 has value 80 , which is ok.. as p is a
+pointer to pointer to const char. q has the value 1800, which in turn has the
+value 1500.
+
+So, if we allowed,
+
+----
+      p = q;
+----
+
+then,  using p one might change what p is pointing to. This is because, p is
+only restrictive on the second dereference, not it its first. It is not a
++char const $$*$$const $$*$$+, but a +char const $$**$$p+, - p is a just pointer to
+pointer to const-char. So, we can change the value of location 1800 using
+p. Now, we may potentially put a read-only location's address at 1800 as p is a
+pointer to pointer to const char. This means we  can put value 80 at location
+1800 using p. But then if one tries to write to 80 using q, which is still
+pointing to 1800, and since q is a pointer to pointer to char, the result would
+be disastrous!!
+
+However, it is safe to cast the following.
+
+----
+   char **p;
+   char *const* q;
+
+   q = p;
+----
+
+or to extend the idea, the following is also safe...
+
+----
+   char  *****p;
+   char  *const *const *const* const * q;
+   q= p ;  //!!! hope u can draw that out and satify yourself... :)
+----
+
+Safe and Happy Coding.
