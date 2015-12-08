@@ -1,0 +1,288 @@
+Introduction to UMTS Security
+==============================
+
+What UMTS security provides
+----------------------------
+
+The purposes of security in UMTS is 2 fold. The Network should be able to
+authenticate that the MS is genuine. The MS should be able to authenticate that
+the network is genuine. In addition to authenticating each other, the MS and
+the Network should be able to communicate in a secured way so that no malicious
+entity is able to eavesdrop on the communication and no malicious entity is
+able to impersonate either the MS or Network to the other entity. The former is
+achieved through ciphering and the latter is achieved through integrity
+checking.
+
+Scope of Article
+-----------------
+
+Although, it is widely known that there is some ciphering and integrity
+checking going on, this article elaborates on the scope of these activites and
+explicity points out how the keys for performing ciphering, algorithms used for
+ciphering are exchanged by the entitites that perform these activities and what
+is *not* ciphered/integrity protected and why that is so.
+
+Key Exchange
+------------
+
+One of the most challenging part to achieve in any crypto system is the key
+management. Although, the encryption algorithms are themselves usually highly
+secure and are designed to withstand many kinds of attacks, it is insufficient,
+if malicious entitites can get hold of the keys that are used in those
+algorithms! Hence secure distribution of keys is as important as
+performing encryption with that key. This article also discusses how
+keys used for ciphering and integrity checking is exchanged (only)
+between MS and Network in UMTS, how a re-nogiation of keys if desired by
+either entity, is triggered.
+
+Entities that are in consideration in the UMTS network
+-------------------------------------------------------
+
+Any crypto system has the following entities - the entities themselves that
+wish to securely communicate themselves, any trusted 3rd party, malicious
+entities, nature of the communication medium between various points. All of
+them pertinent to the UMTS are discussed.
+
+Understanding the MS:
+~~~~~~~~~~~~~~~~~~~~
+
+The object that determines genuiness of a MS is the USIM present in that MS.
+Technically, the MS is made of 2 parts - the Mobile Equipment (ME) and the
+USIM. The USIM is a pluggable card that offers a interface(electrical)  used by
+any ME in which the USIM is inserted into. The USIM has a nonvolatile memory in
+it and stores a lot of information. Some of them are retrievable through this
+interface exposed by the USIM. Certain information is *just* not possible to be
+retrieved. One such information is the Secret Key(K) associated with that IMSI.
+It is surprising as to if this secret key(k) is unretrievable to the ME, how
+would such a information be ever useful. Although, the secret key(K) as such is
+unretrievable, the USIM, would instead, if given a number (RAND) to it by the
+ME, would operate this number on the secret key(k) along with some other
+information in the usim and give back a bunch of numbers to the ME. The ME then
+further uses these numbers for security purposes. Hence the possession of this
+secret Key (K) determines the genuiness of a MS. This key if compromised,
+compromises the IMSI associated with that key. Hence the USIM interface
+is designed such that no-one is able to retrieve this Key out of the
+USIM.
+
+Understanding the Network:
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The UMTS network is divided into the access part and the core part. In UMTS,
+security procedures are defined only for the MS-access-network interface.
+To be precise, only the radio-link between the MS and the RNC are ciphered
+and integrity protected. This is surprising, as for instance, the data packet
+generated from a MS has to travel all the way along the RNC, SGSN, GGSN, and to
+the PDN. However only the MS to RNC link is secured and all security procedures
+defined in UMTS only address securing this link. This is because, only the
+Radio part of the network is considered vulnerable by the UMTS design. The
+radio network is succeptible to attack from any entity as every entity has
+equal access to the open air! However, links between RNC, SGSN, GGSN and PDN
+are private networks maninted by operator(s) and hence it is not necessary to
+provide security on this. Atleast UMTS doesn't define security procedures for
+securing these links. If one operator doesn't trust the network of another or
+his own(!), then it upto the operator(s) to define their own security measures
+between their nodes.
+
+Every operator obtains a license to operate in a particular country and is
+assigned a plmn-id. The mcc ofcourse, is chosen by the international regulatory
+bodies and the mnc is assigned by the national regulatory bodies. Then the
+operator manufactures USIMs and gives them to the subscribers. The USIMs as
+described above contain, among others, the IMSI and the secret key(K). Each
+IMSI is in the range of the plmn-id assigned to the operator. A secret Key is
+chosen for every IMSI by the operator and kept at the Authentication
+Center(AuC) maintained by the operator and put in the USIMs. The only 2 places
+where the secret key(k) is supposed to be kept are the USIM and the AuC. The
+USIM never reveals the secret key to anyone as its electrical interfaces isn't
+designed that way. The AuC is kept under the tight physical security by the
+operator. Thus the secret key is never revealed to any other entity in the
+entire network - no SGSN,RNC,MSC that the MS may visit or any ME that the USIM
+may be inserted into gets to know this secret key(k). This feature is extremely
+important. Operators cannot trust partnering operators of other regions and
+hence a secret key(k) of a IMSI cannot be revealed to every SGSN/MSC that the
+MS is roaming into. Still any SGSN/MSC should be able to authenticate any MS
+that is roaming into its region. We will soon see how these conflicting goals
+are achived.
+
+Authentication Procedure:
+-------------------------
+
+There are the following features offered by the UMTS netwrok
+
+* ability of the Network to authenticate that a MS is genuine
+* ability of the MS to authenticate that the Network is genuine
+* ability of the Network and MS to communicate such that no one else is able to eavesdrop
+* ability of the Network and MS to detect if some-one else is impersonating at the other end.
+* ability of the MS to hide its identity from other entities other than the Network
+* ability of the Network and the MS to negotiate the keys used for security purposes securely
+* ability of the Network and the MS to trigger a re-negotiation of keys, when desired.
+
+Before we dwelve into the details of how each of the above is effected, we
+should understand the nature of the communication medium between the MS and
+RNC. 
+
+A MS when it switches on hunts for available PLMNs at that location. It then
+chooses one plmn and then chooses a cell available in that PLMN and decides to
+camp on that cell. It requests for a control channel from that cell. This
+request reaches the RNC controlling that cell. The RNC does't perform any
+validation check and simply assigns an available channel to the requesting MS.
+Thus any MS (genuine or fraudulent) can request for a control-channel from the
+RNC. The MS, then sends the gmm-message (attach or rau) in the assigned
+channel. This message then reaches the SGSN. This initial message is in
+plain-text. It is possible for anybody else listening to the radio channels to
+also be able to study this message. (Hence the necessity in UMTS to conceal
+mobile identitites).
+
+Authentication at a high level:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The SGSN that receives the message, finds out the IMSI of the MS (either
+directly from the message or through a IMSI-PTMSI mapping at its end). In
+case the SGSN is unable to map the given PTMSI to a IMSI, it can explicity
+request the IMSI from the MS through a identity procedure. Once the IMSI is
+obtained, the SGSN challenges the MS for the possession of the secret key
+associated with that IMSI. The SGSN doesn't the secret key(K) itself, still
+this challenge works! We will soon see how this magic is effected. As a part of
+response to this challenge by the SGSN, the MS in addition to answering to the
+challenge, also generates the keys to be used for ciphering and intergrity
+checking. 
+
+Authentication of the MS by the Network:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A network considers that a MS is genuine if the MS is able to display
+possession of the secret key(k) for the IMSI that it is claiming for itself. We
+have already seen that the SGSN would never get to know the secret key(K)
+itself. So, the SGSN that gets a initial message from any MS(IMSI), contacts
+the AuC for that IMSI to give it authetication parameters. The Auc then gives
+the SGSN one or more authentication vectors. Each authentication vector
+consists of the following
+
+* a random number RAND
+* a expected result XRES
+* a authentication token AUTN
+* ciphering key CK
+* integrity key IK
+
+Upon getting a authentication parameter request from a SGSN for a given IMSI,
+the AuC first chooses a random number(RAND). It then operates this RAND,
+the secret key K and some other information, produces four other numbers -
+XRES, AUTN, CK and IK. It then gives these five numbers to the requesting
+SGSN.
+
+The SGSN, stores the received vectors and uses one vector at a time to initiate
+a challenge for that IMSI. When it wants to challenge a MS, the SGSN initiates
+a Auth&Cipher-Request message. In this message, the SGSN sends the RAND, AUTN.
+The MS recieves it. The ME of the MS, passes down these 2 numbers to the USIM.
+The USIM receives the RAND and since it has all the other information, (the
+secret key(K) among them), it generates the remaining 4 itself - CK, IK,
+AUTN and XRES. The USIM gives these numbers back to the ME. The ME then
+responds with the XRES back to the SGSN. The SGSN now verifies the XRES
+given by the MS with that available in the vector. If they are same, the MS
+has passes authentication! The premise in UMTS is that only a valid USIM,
+with the right secret key(k) will be able to generate the right XRES for
+the given RAND.
+
+We will soon see the use of the other numbers in the vector in the following
+sections.
+
+Authentication of the Network by the MS:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A MS should be able to authenticate that the SGSN that is accepting its attach
+is a genuine SGSN. This is important as, if the network is impersonated by
+malicious entities, the UE might be sending valuble data to this malicious
+network. To effect the MS authenticate the Network, the MS and the Network
+(AuC), both posses one more number, called the sequence number. Every IMSI has
+a secret key(k) and a sequence number associated with it. The MS verifies that
+the network is genuine by ensuring that the network is displaying possession of
+the right sequence number. The AUTN is derived from IMSI, K, seq-number among
+others. Thus for the given RAND, if the MS finds out that the AUTN that it
+generated does't match the AUTN sent by the network, it knows the Network is
+not possessing the right seq-number. 
+
+This is a sequence number because, every time one challenge is performed, this
+number is increased in its value. Since its a dynamically changing number, it
+is possible that if some vectors go unchallenged at some SGSNs, the MS and the
+the AuC may go out of sync with this sequence number. So, when the AUTN is
+wrong, the MS doesn't immediately conclude that the network is bad, but rather
+gives the Network a chance to resync its sequence number and then generate a
+new AUTN. So, when a given RAND, AUTN is not acceptable to the MS, it will have
+to notify the Network of a sequence number mismatch and also let the Network
+know securely of the sequnce number that the MS is having. To effect this, the
+MS instead of responding to the challenge with a Auth&Cipher response, rather
+sends a Auth&Cipher Failure of type Sync failure. In the Sync-failed message,
+the MS encodes its sequence number using the key(K) into a number - AUTS
+and gives it back to the SGSN. The SGSN forwards this RAND, AUTS to the
+AuC. The AuC will be able to recover the sequence number at the MS as it
+also knows the secret key(K) that was used in preparation of AUTS. The
+AuC issues fresh vectors calculted from the new sequence number. 
+
+Ciphered Connection:
+~~~~~~~~~~~~~~~~~~~~~
+
+The MS and the Network after authenticating each other should be able to
+communicate such that other entities are not able to eavesdrop. To achieve this
+each partly encrptys the message that is being sent. The Key necessary for
+encrption should also be exchanged securely. This secure exchange is achived as
+a side-product of the authentication procedure! The vector that the AuC
+prepares contains the encryption key along with it. This ciphering key(CK) is
+derived as function of RAND, K and other numbers that are in possession of AuC
+and USIM only. Thus the MS after processing the authenitication challenge will
+be able to derive the ciphering key(CK) itself. As for the network, the SGSN
+after accepting the Auth and Cipher response from the MS, instructs the RNC to
+start the encryption on the Iu, using a security mode command. 
+
+Integrity-Protected Connection:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Just like ciphering, each entity signs his message using a MAC. The key used
+for producing MAC (IK) is also derived just like how the Ciphering key is
+derived. Each entity before accepting a message calculates the MAC of the
+message and accepts it only if it matches. Else the message is dropped. No one
+other than with the possession of IK, will be able to generate a right packet
+with a correct MAC.
+
+Choosing the algorithm:
+~~~~~~~~~~~~~~~~~~~~~~
+
+In addition to defining procedures for deriving the Ciphering and
+Integrity-Protection keys, UMTS also defines the algorithms to use for
+Ciphering and Integrity-Protecting. At the time of this writing, 2 ciphering
+algorithms and one Integrity-Protection algorithm are available. They are named
+UEA0, UEA1 and UIA0. The MS when it establishes the RRC connection with the
+RNC, gives its algorithm capability to the RNC. The SGSN when it issues a
+security mode command, gives the RNC a list of allowed algorithms that the RNC
+can use on this MS. The RNC then decides which exact algorithm to use, and
+informs both the MS and the SGSN of the choosen algorithm.
+
+Identity Protection:
+~~~~~~~~~~~~~~~~~~~~~
+
+Unlike the other goals, identity hiding is not 100% possible in the UMTS.
+However, UMTS defines procedures that do a best effort to hide the Identity of
+a MS whenever possible. Identity hiding refers to the hiding of information
+like IMSI, IMEI of the MS, when messages from/to the MS are still sent in
+plain-text and when encryption hasn't started yet.  To provide identity-hiding,
+a SGSN generates a temporary identity for a IMSI called the P-TMSI. Once the
+MS attaches the SGSN issues a new PTMSI to the MS. The MS then stores this
+PTMSI and uses it hence-forth to identity itself to the SGSN in any new
+future connection it initiates. Since the P-TMSI is always given to the MS in
+ciphered connection, no one will be able to map a IMSI to the PTMSI outside,
+although they might see a plai-text message with IMSI going at times. (For
+example, first time IMSI attaches and idenity-responses with IMSI).
+
+Key Negotiation:
+~~~~~~~~~~~~~~~~
+
+The authentiction & ciphering procedure if initiated by the SGSN at any time,
+will result in a new key-negotiation. The Network is free to re-initiate
+auth-cipher procedure anytime it wants! In case, the MS wants to
+re-negotiate its keys, it simply sends a new message with the cksn value as
+7. The cksn is a number from 0-6 or 7. 0-6 are valid values that identify a
+valid auth-vector. The MS should store the lastest cksn received from the
+network and put that in any new message if it wants to continue using the
+recently negtiated keys and skip authetication procedure. It should be
+noted that even though a explicit authetication procedure is skipped during
+a new connection establishment, the possession of right CK and IK and cksn
+itself is a token of assurance that the other part is a genuine party.
+
