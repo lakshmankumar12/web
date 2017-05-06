@@ -1,0 +1,390 @@
+Linux IP Routing
+================
+:toc:
+
+Introduction
+------------
+
+I present here my understanding of routing in linux host. I was fortunate to
+have a session in person with a team member who is very adept at it. I found
+the session very informative, as it distills the crux of the subject quickly
+without all the correctness/completeness clutter, that takes away our focus in
+understanding the material when we read any literature. Thus I hope this
+article is of value to the reader, although there is plenty of literature on
+this topic.
+
+Disclaimer
+----------
+
+To restate the obvious, this is my understanding and its evolving and
+can be wrong. You should eventually validate this with other literature
+that is authoritative or your own observations, study and experiments.
+
+My sources
+----------
+
+List of places from where I referred. There are lot more, but these are places
+from where I have take a lot of material this article
+
+* https://www.digitalocean.com/community/tutorials/an-introduction-to-networking-terminology-interfaces-and-protocols[digital ocean]
+* https://www.amazon.com/Linux-iptables-Pocket-Reference-Gregor/dp/0596005695[linux IPtables pocket reference]
+
+Utilities to see information
+----------------------------
+
+Older deprecated commands
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+----
+netstat
+ifconfig
+----
+
+Newer commands
+~~~~~~~~~~~~~~
+
+Most of the above information is now provided by the iproute2
+package. It has the +ip+, +ss+ commands. +iptables+ is the user space
+command for the netfilter kernel module that offers
+fine-grained routing control.
+
+Plain/Simple Routing
+--------------------
+
+The simplest routing that happens is destination based. This is what we are
+mostly familiar with. Here is a routing table in a simple machine.
+
+----
+$ ip route show
+default via 172.17.0.1 dev eth0
+172.17.0.0/16 dev eth0  proto kernel  scope link  src 172.17.0.2
+----
+
+This machine has just one ethernet interface.
+
+----
+$ ip -o -4 addr show
+1: lo    inet 127.0.0.1/8 scope host lo\       valid_lft forever preferred_lft forever
+107: eth0    inet 172.17.0.2/16 scope global eth0\       valid_lft forever preferred_lft forever
+----
+
+Deciphering the routing table is not hard. Any packet can come from either
+the wire or from a local application. The kernel subjects that packet to
+this routing table based on the destination IP of the packet.
+
+* If it matches the local-IP/loop-back IP, the packet is consumed locally.
+* If the destination matches the +172.17.$$*$$.$$*$$+ subnet its directly sent
+  over the eth0 interface (using L2-arp).
+* Any other destination is sent to the +172.17.0.1+ machine, which is commonly
+  referred as the default-gateway and this is referred as the default route.
+
+A machine with 2 or more ethernet interfaces connecting to different subnets
+will have a slightly more elaborate routing table, but still it follows
+the same simple rules as above to understand.
+
+----
+$ ip route show
+192.1.11.0/24 dev eth1  proto kernel  scope link  src 192.1.11.2
+192.11.1.0/24 via 192.168.1.1 dev eth1  src 192.1.11.2
+192.2.13.0/24 dev eth2  proto kernel  scope link  src 192.2.13.2
+192.168.3.0/24 dev eth3  proto kernel  scope link  src 192.168.3.3
+192.11.3.0/24 via 192.168.3.1 dev eth3  src 192.3.11.2
+default via 192.2.13.1 dev eth2
+----
+
+The above machine apparently has 3 interfaces.
+
+----
+* eth1 with 192.1.11.2/24
+* eth2 with 192.2.13.2/24
+* eth3 with 192.168.3.3/24
+----
+
+Each of the directly connected networks are routed directly on the
+respective interfaces. There is a route to +192.11.1.$$*/$$24+ via eth1
+and to +192.11.3.$$*/$$24+ via eth3, while the default route is via
+eth2.
+
+
+Policy based routing
+--------------------
+
+Any routing decision done on the packet other than its destination
+IP is referred as policy based routing. It could be on the origin interface
+from where the packet appears, source-ip, tos, protocol-type, ports, or well
+anything. Linux richly supports such policy based routing via its
+ip-routing-rules and IPtables.
+
+There are 2 things to understand - IPtables and routing-rules. They interplay
+and I am not sure which one is the best to be introduced first. I will start
+with routing-rules.
+
+The following command dumps all the routing-rules in a linux host. This is
+the standard display in most machines, where no fancy routing is configured.
+
+----
+$ ip rule show
+0:    from all lookup local
+32766:    from all lookup main
+32767:    from all lookup default
+----
+
+Whenever a routing decision needs to be taken on a packet, it is subjected
+to the routing-rules one by one, until a rule is hit. The above command lists
+all the routing-rules in the system. (I tend to be picky about using the term
+routing-rule instead of just rule, to distinguish this routing-rule from the
+IPtables's rule which I will introduce later)
+
+The following are to be remembered about the routing-rules.
+
+* Each routing-rule consists of a rule-number, match-criterion and routing-table to use.
+* Each routing-rule has a rule-number between 0 to 32K
+* Match criterion is what the packet should match against. This can be
+list of patterns to match. These can be
+** source-addr/mask
+** input-interface
+** all
+** mark (This is a the most popular way as the source ip/interface isn't very flexible).
+* Routing-rule 0 is the only rule that can't be edited or deleted. It always matches all packets
+  and always goes to the local routing-table.
+* Routing-rule number marks the order in which its taken up. Routing-rule-0 is
+  worked on first and higher rules are taking up in order. When a packet
+  matches an entry in a given rule, the processing terminates there.
+* Two routing-rules can be assigned the same number. Its then first-added done first.
+  This is rarely leveraged in practice, as that's only confusing.
+
+We can create new routing tables, and new routing rules, edit existing rules. As mentioned
+since the match-criterion is too limited on its options, the mark is the most popular way
+to match flexibly on packets of choice. The marks themselves are applied on packets using
+IPtables, before they are subjected to a routing-decision. More on this is coming soon.
+
+The routing-table can be showing using the following command. (Again I tend to be picky
+about using the term routing-table instead of plain table to explicitly distinguish
+these tables from IPtables' tables!)
+
+----
+$ ip route show table local
+broadcast 127.255.255.255 dev lo  proto kernel  scope link  src 127.0.0.1
+broadcast 172.16.1.255 dev eth0  proto kernel  scope link  src 172.16.1.68
+local 172.16.1.68 dev eth0  proto kernel  scope host  src 172.16.1.68
+broadcast 172.16.1.0 dev eth0  proto kernel  scope link  src 172.16.1.68
+broadcast 127.0.0.0 dev lo  proto kernel  scope link  src 127.0.0.1
+local 127.0.0.1 dev lo  proto kernel  scope host  src 127.0.0.1
+local 127.0.0.0/8 dev lo  proto kernel  scope host  src 127.0.0.1
+----
+
+The local routing-table as mentioned before can't be deleted, however linux allows
+editing entries there (at risk of oneself!). The local table is typically meant to
+capture all self-destined packets. This table is rarely edited and is left as is.
+
+Lets study each entry in a routing-table.
+
+* broadcast/local <IP-value> mean just that. A broadcast'ed packet or a
+  unicast'ed packet with a particular destination address. This is the
+  match-criterion in the packets.  Everything that follows is the action-part,
+  on what is to be done about it.
+* dev XXX tells the kernel to send it to that interface and process it.
+* src <ip> tells the kernel to use this source ip in case, the packet doesn't have
+  a source ip yet (in case of packets sent from local processes that haven't bound
+  themselves to any particular local IP) This is optional. If its not mentioned
+  in a entry and the kernel needs to apply one to a packet, it uses the primary
+  IP of the interface.
+* scope host/link tells if the packet is for a host or be sent on a L2 link
+* proto XXX is mostly extraneous info - just tells what is the source of the
+  route. proto kernel means, the kernel added that itself. Kernel typically
+  add the per-host local routes whenever a IP is assigned to a interface.
+* It should be noted that there is no explicit ordering of entries within a
+  routing-rule. They are implicitly ordered on their match-ip-prefix-mask,
+  so that the longest matching prefix is taken up.
+
+The main routing table is typically the one with all external routes we have in
+a machine.
+
+----
+$ ip route show table main
+172.16.1.0/24 dev eth0  proto kernel  scope link  src 172.16.1.68
+169.254.0.0/16 dev eth0  scope link  metric 1002
+default via 172.16.1.1 dev eth0
+----
+
+In fact, when we did the +ip route show+, it basically gives a summary information
+primarily taken from the main-routing-table. +ip route show+ suppress a lot of
+details from the local-table. The main routing-table also has the default-entry
+which is the final catch-all.
+
+The default-routing-table is rarely used at all. In fact, in normal setups, the
+default entry in the main routing-table is the final catch-all and no packet
+every passes beyond that.
+
+IPtables
+-------
+
+Now, onto IPtables. So, far we saw the routing-decision framework offered by kernel.
+As seen already, the routing rules dont offer much in terms of match-criterion. To
+fill in the void, we have the ability to mark a packet. A mark is a number(32
+bits), that is applied on every packet. The default mark for any packet is 0 until
+its assigned some other number. IPtables is the way to apply a non-0 mark on a
+packet so that it can interplay with the routing-rules in powerful ways.
+
+IPtables is the user level command utility to control the netfilter kernel module.
+I find the literature use the terms IPtables/netfilter interchangeably. I will use
+IPtables mostly.
+
+IPtables has the concept of Tables, Chains and Rules. As I had been hinting before
+we need to distinguish routing-rules/routing-tables with IPtables's rules and tables.
+I tend to use the routing prefix when I need to refer to routing-rules/routing-tables
+and plain rules and tables when I need to refer to IPtables.
+
+While the literature (and the iptables-save command for instance), tend to refer to
+Chains as being contained under Tables, I find viewing chains first and then tables
+as under chains more easy to follow through. My intention is to quickly introduce
+the flow of a packet through the netfilter module as its acted upon instead of being
+correct in terms and definitions. So, please read through the literature before
+you ingrain the below, for correctness.
+
+Here is the flow of a packet through the IPtable chains.
+
+----
+R-D: Routing-Decision
+
++--------+    +--------+        +---+      +--------+                   +--------+
+|Ntwk    |--->|PRE     |--------|R-D|----->|INPUT   |------------------>|Local   |
+|Intf    |    |ROUTING |        +---+      |        |                   |Process |
++--------+    +--------+          |        +--------+                   +--------+
+                                  v          ^
+                              +--------+     |
+                              |FORWARD |     |
+                              |        |     |
+                              +--------+     |
+                                  |          |
++--------+    +--------+          v        +---+   +--------+  +---+   +--------+
+|Ntwk    |<---|POST    |<------------------|R-D|<--|OUTPUT  |<-|R-D|---|Local   |
+|Intf    |    |ROUTING |                   +---+   |        |  +---+   |Process |
++--------+    +--------+                           +--------+          +--------+
+----
+
+Lets take the 4 typical flows:
+
+* Inbound pkts from Intf: +Intf --> PREROUTING --> INPUT --> Process+
+* Outbound pkts to Intf:  +Process --> OUTPUT --> POSTROUTING --> Intf+
+* Routed pkts:            +Intf --> PREROUTING --> FORWARD --> POSTROUTING --> Intf+
+* Process-to-Process:     +Process --> OUTPUT --> INPUT --> Process+
+
+A chain is a hook-point where some checks and actions are done on a packet. After
+passing through a chain, the packet is subjected to a routing-decision that decides
+if a packet is to be forwarded to another interface or locally consumed. The
+*routing-decision is the running-through of the packet against the routing rules*
+that we saw earlier. This is how the IPtables and routing-rules work in concert.
+Thus before the routing-decision is taken, IPtables offers us chains in which we
+can mark our packets in some way, edit the packet's addresses/ports so that we
+can take different routing decisions on the packet.
+
+Each IPtables-chain has a different collection of IPtables-tables. Here is a not
+so exhaustive list of tables that are available under different chains.
+
+----
+PREROUTING        POSTROUTING         OUTPUT       FORWARD      INPUT
+
+HotSpot Input
+ConnTrack                             ConnTrack
+Mangle            Mangle              Mangle       Mangle       Mangle
+                                      Filter       Filter       Filter
+                                                   Accounting
+DestinationNat
+Global-In Que
+                  Global-Out Que
+Global-Tot Que    Global-Tot Que
+                  SourceNat
+                  HotSpot Output
+----
+
+The combination of available tables under chains is pre-defined. Not all tables are
+meaningful under each chain. Each Chain-under-Table, contain a list of rules.
+To understand each rule, lets look at a iptables command that adds a rule.
+
+----
+iptables -t nat -A PREROUTING -i eth1 -p tcp --dport 80 -j DNAT --to-destination 192.168.1.3:8080
+----
+
+The above adds a rule into the PREROUTING chain, into the nat table (It will be destination nat, as
+its the PREROUTING chain). Each rule mentions the match-criterion and the action part. IPtables calls
+the action part as the jump-target. Here is a detailed explanation of each arg in the above rule.
+
+----
+-t nat         Operate on the nat table...
+-A PREROUTING  ... by appending the following rule to its PREROUTING chain.
+-i eth1        Match packets coming in on the eth1 network interface...
+-p tcp         ... that use the tcp (TCP/IP) protocol
+--dport 80     ... and are intended for local port 80.
+-j DNAT        Jump to the DNAT target...
+--to-destination 192.168.1.3:8080 ... and change the destination address to 192.168.1.3 and destination port to 8080.
+----
+
+We can dump all existing rules in a machine by using the +iptables-save+ command
+
+Processing flow in IPtables
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Packets traverse chains, and are presented to the chains’ rules one at a time in order.
+* If the packet does not match the rule’s criteria, the packet moves to the next rule in the chain.
+* If a packet reaches the last rule in a chain and still does not match, the chain’s policy
+  (essentially the chain’s default target) is applied to it
+* Each rule consists of one or more match criteria that determine which network
+  packets it affects (all match options must be satisfied for the rule to match
+  a packet) and a target specification that determines how the network
+  packets will be affected
+* kernel  maintains a pkt & byte couner for every rule.
+* Match is optional => all pkts match
+* Target is also optional(!) => as-if rules doesn't exist. Just stat'ed.
+
+IPtables also allows us to create user-defined tables. The existing ones are
+referred as built-in chains. The following are some points I gathered from
+the iptables pocket reference. (Note the following refer chains, but what is
+meant is a chain under a particular table)
+
+* A chain’s policy determines the fate of packets that reach the
+  end of the chain without otherwise being sent to a specific target.
+* Only the built-in targets (see Table 8) ACCEPT and DROP can be used as the
+  policy for a built-in chain, and the default is ACCEPT.  All user-defined
+* chains have an implicit policy of RETURN that cannot be changed. If you want
+  a more complicated policy for a built-in chain or a policy other
+  than RETURN for a user-defined chain, you can add a rule to the end of the
+  chain that matches all packets, with any target you like.
+* You can set the chain’s policy to DROP in case you make a mistake in your
+  catch-all rule or wish to filter out traffic while you make modifications to
+  your catch-all rule (by deleting it and re-adding it with changes)
+
+
+Various targets in IPtables
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Not all jump-targets are valid on all tables/chains. Following are some jump
+target that I have encountered.  Here are some popular targets
+
+----
+mangle-PREROUTING   -- This is where we mark packets, so that this mark is leveraged on routing-decision.
+-j MARK --set-xmark <mark-value>
+
+filter-INPUT
+-j DROP #Discontinue processing the packet completely.
+        #Do not check it against any other rules, chains, or tables.
+        #If you want to provide some feedback to the sender, use the REJECT target extension.
+-j ACCEPT  #Let the packet through to the next stage of processing.
+           #Stop traversing the current chain, and start at the next stage
+-j QUEUE   #Send the packet to userspace (i.e. code not in the kernel).
+           #See the libipq manpage for more information.
+-j RETURN  #From a rule in a user-defined chain, discontinue processing this chain, and
+           #resume traversing the calling chain at the rule following the one that had this chain
+           #as its target.
+----
+
+Bringing it all Together
+------------------------
+
+For the most part, just using iptables coupled with simple routing rules solves
+most basic needs like firewalling, NAT'ing, port-forwarding, load-balancing
+etc... When we are dealing with machines that handle multi-tenancy like
+gathering traffic from different ip-sec-tunnels, de-tunnelling them and
+re-tunnelling it back, and we need to maintain the partitioning of traffic from
+each tunnel separately, linux offers us the ability to route packets in various
+ways as mentioned above, by marking them, moving them to different routing tables.
