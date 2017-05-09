@@ -935,14 +935,14 @@ meant is a chain under a particular table)</p>
 end of the chain without otherwise being sent to a specific target.</p>
 </li>
 <li>
-<p>Only the built-in targets (see Table 8) ACCEPT and DROP can be used as the
-policy for a built-in chain, and the default is ACCEPT.  All user-defined</p>
+<p>Only the built-in targets ACCEPT and DROP can be used as the
+policy for a built-in chain, and the default is ACCEPT.</p>
 </li>
 <li>
-<p>chains have an implicit policy of RETURN that cannot be changed. If you want
-a more complicated policy for a built-in chain or a policy other
-than RETURN for a user-defined chain, you can add a rule to the end of the
-chain that matches all packets, with any target you like.</p>
+<p>All user-defined chains have an implicit policy of RETURN that cannot be
+changed. If you want a more complicated policy for a built-in chain or a
+policy other than RETURN for a user-defined chain, you can add a rule to the
+end of the chain that matches all packets, with any target you like.</p>
 </li>
 <li>
 <p>You can set the chain’s policy to DROP in case you make a mistake in your
@@ -996,7 +996,7 @@ ways as mentioned above, by marking them, moving them to different routing table
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-05-09 20:46:19 UTC
+Last updated 2017-05-09 21:08:07 UTC
 </div>
 </div>
 </body>
