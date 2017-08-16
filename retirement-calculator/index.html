@@ -10,7 +10,8 @@
             <h1>Retirement Calculator</h1>
         </div>
     </head>
-    <body onLoad="brython()">
+    <body onLoad="brython(2)">
+        <div class="container">
         <div class="panel panel-body">
             <div class="form group">
             <table> <tr> <td>
@@ -58,6 +59,10 @@
         <div id="calculated_table">
         </div>
         <div id="calculated_table_error" class="text-danger">
+        </div>
+        <div class="canvas-container">
+            <canvas id="plotarea" width="840" height="440"></canvas>
+        </div>
         </div>
         <script type="text/python">
 
@@ -150,8 +155,7 @@ def handle_till_age_change(event):
     elif age <= s_age:
         document['till_age_error'] <= P("Sustainence Age should be greater than present age")
         document['till_age'].focus()
-    else:
-        update_table(None)
+    update_table(None)
 
 def verify_int_value(field,error_str,min,max):
     val = int(document[field].value)
@@ -159,8 +163,7 @@ def verify_int_value(field,error_str,min,max):
     if val < min or val > max:
         document[field+'_error'] <= P(error_str+" should be between %d and %d"%(min,max))
         document[field].focus()
-    else:
-        update_table(None)
+    update_table(None)
 
 def verify_float_value(field,error_str,min,max):
     val = float(document[field].value)
@@ -168,8 +171,7 @@ def verify_float_value(field,error_str,min,max):
     if val < min or val > max:
         document[field+'_error'] <= P(error_str+" should be between %.2f and %.2f"%(min,max))
         document[field].focus()
-    else:
-        update_table(None)
+    update_table(None)
 
 def handle_age_change(event):
     verify_int_value('age','Present age',18,101)
