@@ -90,7 +90,7 @@ def insert_table(values):
     tbody = TBODY()
     for row in values:
         r = TR()
-        for v in row:
+        for v in row[:5]:
             r <= TD(v)
         tbody <= r
     table <= tbody
