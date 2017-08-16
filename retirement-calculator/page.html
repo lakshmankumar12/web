@@ -13,33 +13,51 @@
     <body onLoad="brython()">
         <div class="panel panel-body">
             <div class="form group">
+            <table> <tr> <td>
             <p>
             <label for="age">Enter your present age</label>
-            <input id="age" type="number" name="age" value="30" class="form-group">
+            <input id="age" type="number" name="age" value="30" min="18" max="121" pattern="\d*" class="form-group">
             </p>
+            </td> <td> <div id="age_error" class="text-danger"></div> </td> </tr>
+            </table>
 
+            <table> <tr> <td>
             <p>
             <label for="till_age">Enter your expected age for which you need ur corpus to be available</label>
-            <input id="till_age" type="number" name="till_age" value="75" class="form-group">
+            <input id="till_age" type="number" name="till_age" value="75" min="18" max="121" pattern="\d*" class="form-group">
             </p>
+            </td> <td> <div id="till_age_error" class="text-danger"></div> </td> </tr>
+            </table>
 
+            <table> <tr> <td>
             <p>
-            <label for="returns">Enter your expected rate of returns on investment</label>
-            <input id="returns" type="number" name="returns" value="8.0" class="form-group">
+            <label for="returns">Enter your expected rate of returns on investment in Percentage</label>
+            <input id="returns" type="number" name="returns" value="8.0" min="0" max="30" class="form-group">
             </p>
+            </td> <td> <div id="returns_error" class="text-danger"></div> </td> </tr>
+            </table>
 
+            <table> <tr> <td>
             <p>
             <label for="inflation">Enter your expected inflation percentage</label>
-            <input id="inflation" type="number" name="inflation" value="7.0" class="form-group">
+            <input id="inflation" type="number" name="inflation" value="7.0" min="0" max="30" class="form-group">
             </p>
+            </td> <td> <div id="inflation_error" class="text-danger"></div> </td> </tr>
+            </table>
 
+            <table> <tr> <td>
             <p>
             <label for="expenses">Enter your monthly expected as of today</label>
-            <input id="expenses" type="number" name="expenses" value="35000" class="form-group">
+            <input id="expenses" type="number" name="expenses" value="35000" min="1" max="1000000" pattern="\d*" class="form-group">
             </p>
+            </td> <td> <div id="expenses_error" class="text-danger"></div> </td> </tr>
+            </table>
+
             </div>
         </div>
         <div id="calculated_table">
+        </div>
+        <div id="calculated_table_error" class="text-danger">
         </div>
         <script type="text/python">
 PLACEHOLDER_APP_PY

@@ -1,7 +1,13 @@
 from browser import document,alert
-from browser.html import TABLE, THEAD, TBODY, TR, TH, TD
+from browser.html import TABLE, THEAD, TBODY, TR, TH, TD, P
 
 def insert_table(values):
+    document["calculated_table"].clear()
+    document["calculated_table_error"].clear()
+
+    if not values:
+        document["calculated_table_error"] <= P("Fix the errors")
+
     table = TABLE()
     table.classList.add("table")
     table.classList.add("table-striped")
@@ -19,7 +25,6 @@ def insert_table(values):
         tbody <= r
     table <= tbody
 
-    document["calculated_table"].clear()
     document["calculated_table"] <= table
 
 def fmts(val):
@@ -31,6 +36,21 @@ def calculate_values():
     returns = float(document['returns'].value)
     inflation = float(document['inflation'].value)
     expenses = int(document['expenses'].value)
+
+    if age < 18 or age > 101:
+        return []
+
+    if sustain_age <= age or sustain_age > 101:
+        return []
+
+    if returns < 0 or returns > 30:
+        return []
+
+    if inflation < 0 or inflation > 30:
+        return []
+
+    if expenses < 1 or expenses > 1000000:
+        return []
 
     expenses_per_year = [0] * sustain_age
     corpus_at_year = [0] * sustain_age
@@ -56,14 +76,58 @@ def calculate_values():
         values.append(a)
     return values
 
+
+def handle_till_age_change(event):
+    s_age = int(document['age'].value)
+    age = int(document['till_age'].value)
+    document['till_age_error'].clear()
+    if age < 18 or age > 101:
+        document['till_age_error'] <= P("Sustainence Age should be between 18 and 101")
+        document['till_age'].focus()
+    elif age <= s_age:
+        document['till_age_error'] <= P("Sustainence Age should be greater than present age")
+        document['till_age'].focus()
+    else:
+        update_table(None)
+
+def verify_int_value(field,error_str,min,max):
+    val = int(document[field].value)
+    document[field+'_error'].clear()
+    if val < min or val > max:
+        document[field+'_error'] <= P(error_str+" should be between %d and %d"%(min,max))
+        document[field].focus()
+    else:
+        update_table(None)
+
+def verify_float_value(field,error_str,min,max):
+    val = float(document[field].value)
+    document[field+'_error'].clear()
+    if val < min or val > max:
+        document[field+'_error'] <= P(error_str+" should be between %.2f and %.2f"%(min,max))
+        document[field].focus()
+    else:
+        update_table(None)
+
+def handle_age_change(event):
+    verify_int_value('age','Present age',18,101)
+
+def handle_returns_change(event):
+    verify_float_value('returns','Returns Percent',0,30)
+
+def handle_inflation_change(event):
+    verify_float_value('inflation','Inflation Percent',0,30)
+
+def handle_expenses_change(event):
+    verify_int_value('expenses','Monthly Expenses',1,1000000)
+
 def update_table(event):
     values = calculate_values()
     insert_table(values)
 
-document['age'].bind('change',update_table)
-document['till_age'].bind('change',update_table)
-document['returns'].bind('change',update_table)
-document['inflation'].bind('change',update_table)
-document['expenses'].bind('change',update_table)
+document['age'].bind('change',handle_age_change)
+document['till_age'].bind('change',handle_till_age_change)
+document['returns'].bind('change',handle_returns_change)
+document['inflation'].bind('change',handle_inflation_change)
+document['expenses'].bind('change',handle_expenses_change)
 
 update_table(None)
