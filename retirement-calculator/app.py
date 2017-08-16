@@ -1,6 +1,58 @@
 from browser import document,alert
 from browser.html import TABLE, THEAD, TBODY, TR, TH, TD, P
 
+canvas = document["plotarea"]
+ctx = canvas.getContext("2d")
+
+min_corpus = 0
+max_corpus = 0
+
+def axis(color = "black", linethick = 3):
+    #Draw of x axis
+    draw_line(20, 420, 820, 420, linethick = linethick, color = color)
+    #Draw of y axis
+    draw_line(20, 20, 20, 420, linethick = linethick, color = color)
+
+def figure_title():
+    ctx.clearRect(410, 0, 400, 30)
+    ctx.fillStyle = "gray"
+    ctx.font = "bold 16px Arial"
+    ctx.fillText("Corpus Required", 410, 20)
+
+def draw_line(x1, y1, x2, y2, linethick = 3, color = "black"):
+    ctx.beginPath()
+    ctx.lineWidth = linethick
+    ctx.moveTo(x1, y1)
+    ctx.lineTo(x2, y2)
+    ctx.strokeStyle = color
+    ctx.stroke()
+
+def change_ref_system(x, y, xscale, yscale):
+    # we have xlen = 800, ylen=400
+    # x are ints
+    return (20 + float(x)/xscale * 800, 420 - (int(y * 400 /yscale)))
+
+def clear_canvas():
+    ctx.clearRect(0,0,canvas.width,canvas.height)
+
+def redraw_canvas(values):
+    clear_canvas()
+    if not values:
+        return
+
+    axis(color = "black", linethick = 5)
+    figure_title()
+
+    yscale = max_corpus
+    xscale = len(values)
+
+    xprev,yprev = change_ref_system(0,values[0][5],xscale,yscale)
+    for n,i in enumerate(values):
+        x,y = change_ref_system(n,i[5],xscale,yscale)
+        draw_line(xprev, yprev, x, y, linethick=3, color="blue")
+        xprev = x
+        yprev = y
+
 def insert_table(values):
     document["calculated_table"].clear()
     document["calculated_table_error"].clear()
@@ -31,6 +83,8 @@ def fmts(val):
     return '${:,.2f}'.format(val)
 
 def calculate_values():
+    global max_corpus
+    global min_corpus
     age = int(document['age'].value)
     sustain_age = int(document['till_age'].value)
     returns = float(document['returns'].value)
@@ -70,9 +124,15 @@ def calculate_values():
         prev_corpus = corpus_at_year[i]
 
     values = []
+    min_corpus = corpus_at_year[age]
+    max_corpus = corpus_at_year[age]
     for i in range(age,sustain_age):
+        if corpus_at_year[i] < min_corpus:
+            min_corpus = corpus_at_year[i]
+        if corpus_at_year[i] > max_corpus:
+            max_corpus = corpus_at_year[i]
         a = (i,fmts(corpus_at_year[i]), fmts(expenses_per_year[i]),
-                    fmts(expenses_per_year[i]/12), fmts(corpus_at_year[i]-expenses_per_year[i]))
+                    fmts(expenses_per_year[i]/12), fmts(corpus_at_year[i]-expenses_per_year[i]),corpus_at_year[i])
         values.append(a)
     return values
 
@@ -120,6 +180,7 @@ def handle_expenses_change(event):
 def update_table(event):
     values = calculate_values()
     insert_table(values)
+    redraw_canvas(values)
 
 document['age'].bind('change',handle_age_change)
 document['till_age'].bind('change',handle_till_age_change)
