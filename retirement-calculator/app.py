@@ -6,12 +6,30 @@ ctx = canvas.getContext("2d")
 
 min_corpus = 0
 max_corpus = 0
+age = 0
+sustain_age = 0
+
+def axis_val(x,y,val):
+    ctx.fillStyle = "violet"
+    ctx.font = "bold 16px Arial"
+    ctx.fillText(val, x, y)
 
 def axis(color = "black", linethick = 3):
     #Draw of x axis
     draw_line(20, 420, 820, 420, linethick = linethick, color = color)
     #Draw of y axis
     draw_line(20, 20, 20, 420, linethick = linethick, color = color)
+    axis_val(0,20,'{:,.0f}'.format(max_corpus))
+    axis_val(0,153,'{:,.0f}'.format(max_corpus*2/3))
+    axis_val(0,286,'{:,.0f}'.format(max_corpus/3))
+    axis_val(0,420,'{:,.0f}'.format(0))
+    axis_val(20,420,'{}'.format(age))
+    axis_val(800,420,'{}'.format(sustain_age))
+    diff = sustain_age - age
+    if diff > 10:
+        axis_val(220,420,'{}'.format(int(diff/4)+age))
+        axis_val(420,420,'{}'.format(int(diff/2)+age))
+        axis_val(620,420,'{}'.format(int(diff*3/4)+age))
 
 def figure_title():
     ctx.clearRect(410, 0, 400, 30)
@@ -85,6 +103,8 @@ def fmts(val):
 def calculate_values():
     global max_corpus
     global min_corpus
+    global age
+    global sustain_age
     age = int(document['age'].value)
     sustain_age = int(document['till_age'].value)
     returns = float(document['returns'].value)
