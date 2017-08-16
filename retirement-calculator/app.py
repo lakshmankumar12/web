@@ -87,8 +87,7 @@ def handle_till_age_change(event):
     elif age <= s_age:
         document['till_age_error'] <= P("Sustainence Age should be greater than present age")
         document['till_age'].focus()
-    else:
-        update_table(None)
+    update_table(None)
 
 def verify_int_value(field,error_str,min,max):
     val = int(document[field].value)
@@ -96,8 +95,7 @@ def verify_int_value(field,error_str,min,max):
     if val < min or val > max:
         document[field+'_error'] <= P(error_str+" should be between %d and %d"%(min,max))
         document[field].focus()
-    else:
-        update_table(None)
+    update_table(None)
 
 def verify_float_value(field,error_str,min,max):
     val = float(document[field].value)
@@ -105,8 +103,7 @@ def verify_float_value(field,error_str,min,max):
     if val < min or val > max:
         document[field+'_error'] <= P(error_str+" should be between %.2f and %.2f"%(min,max))
         document[field].focus()
-    else:
-        update_table(None)
+    update_table(None)
 
 def handle_age_change(event):
     verify_int_value('age','Present age',18,101)

@@ -10,7 +10,8 @@
             <h1>Retirement Calculator</h1>
         </div>
     </head>
-    <body onLoad="brython()">
+    <body onLoad="brython(2)">
+        <div class="container">
         <div class="panel panel-body">
             <div class="form group">
             <table> <tr> <td>
@@ -58,6 +59,10 @@
         <div id="calculated_table">
         </div>
         <div id="calculated_table_error" class="text-danger">
+        </div>
+        <div class="canvas-container">
+            <canvas id="plotarea" width="840" height="440"></canvas>
+        </div>
         </div>
         <script type="text/python">
 PLACEHOLDER_APP_PY
