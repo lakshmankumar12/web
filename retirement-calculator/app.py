@@ -77,6 +77,7 @@ def insert_table(values):
 
     if not values:
         document["calculated_table_error"] <= P("Fix the errors")
+        return
 
     table = TABLE()
     table.classList.add("table")
