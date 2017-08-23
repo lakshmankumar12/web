@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+        <script type="text/javascript" src="brython.js"></script>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width" />
+        <title>Rapid Recall</title>
+        <div class="panel panel-heading">
+            <h1>Rapid Recall</h1>
+        </div>
+        <style>
+        .numbersignblock {
+            display: block;
+            padding: 19px 39px 18px 39px;
+            border: 1px solid #16a085;
+            font-size: 18px;
+            text-align: center;
+        }
+        .numbers {
+            color: #FFF;
+            background: #1abc9c;
+        }
+        .sign {
+            color: #FFF;
+            background: #C0C0C0;
+            border: 1px solid #C0C0C0;
+        }
+        </style>
+    </head>
+    <body onLoad="brython(2)">
+        <div class="container">
+        <div class="panel panel-body">
+            <table>
+                <tbody>
+                <tr>
+                    <td>
+                        <label for="no_questions">Number of Questions</label>
+                        <input id="no_questions" type="number" value="5" min="3" max="20" pattern="\d*" class="form-group">
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label for="timer_duration">Timer Duration</label>
+                        <input id="timer_duration" type="number" value="7" min="3" max="20" pattern="\d*" class="form-group">
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <button type="button" id="start_btn" class="btn btn-primary">Start</button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+            <hr>
+            <div class="row">
+                <div class="col-md-2">
+                <p class="numbersignblock numbers">
+                    7
+                </p>
+                </div>
+                <div class="col-md-2">
+                <p class="numbersignblock sign">
+                    x
+                </p>
+                </div>
+                <div class="col-md-2">
+                <p class="numbersignblock numbers">
+                    8
+                </p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                <input id="result" type="number" class="numbersignblock">
+                </div>
+                </td>
+            </div>
+        </div>
+        </div>
+        <script type="text/python">
+PLACEHOLDER_APP_PY
+        </script>
+    </body>
+</html>
