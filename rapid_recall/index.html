@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+        <script type="text/javascript" src="brython.js"></script>
+        <script type="text/javascript" src="brython_stdlib.js"></script>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width" />
+        <title>Rapid Recall</title>
+        <div class="panel panel-heading">
+            <h1>Rapid Recall</h1>
+        </div>
+        <style>
+        .numbersignblock {
+            display: block;
+            padding: 19px 39px 18px 39px;
+            border: 1px solid #16a085;
+            font-size: 18px;
+            text-align: center;
+        }
+        .numbers {
+            color: #FFF;
+            background: #1abc9c;
+        }
+        .sign {
+            color: #FFF;
+            background: #C0C0C0;
+            border: 1px solid #C0C0C0;
+        }
+        .decl_right {
+            color: #FFFFFF;
+            background: #00816A;
+        }
+        .decl_wrong {
+            color: #FFFFFF;
+            background: #800000;
+        }
+        .decl_timeout {
+            color: #FFFFFF;
+            background: #b366ff;
+        }
+        </style>
+    </head>
+    <body onLoad="brython(2)">
+        <div class="container">
+        <div class="panel panel-body">
+            <table>
+                <tbody>
+                <tr>
+                    <td>
+                        <label for="no_questions">Number of Questions</label>
+                        <input id="no_questions" type="number" value="5" min="3" max="20" pattern="\d*" class="form-group">
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label for="timer_duration">Timer Duration</label>
+                        <input id="timer_duration" type="number" value="7" min="3" max="20" pattern="\d*" class="form-group">
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <button type="button" id="start_btn" class="btn btn-primary">Start</button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+            <hr>
+            <div class="row">
+                <span class="col-md-3">Total Questions:</span>
+                <span class="col-md-1" id="tot_questions">0</span>
+            </div>
+            <div class="row">
+                <span class="col-md-3">Question Right:</span>
+                <span class="col-md-1" id="right_questions">0</span>
+            </div>
+            <div class="row">
+                <span class="col-md-3">Question Wrong:</span>
+                <span class="col-md-1" id="wrong_questions">0</span>
+            </div>
+            <div class="row">
+                <span class="col-md-3">Question Timedout:</span>
+                <span class="col-md-1" id="timeout_questions">0</span>
+            </div>
+            <div class="row">
+                <span class="col-md-3">Time Left:</span>
+                <span class="col-md-1" id="time_left">1</span>
+            </div>
+            <div class="row">
+                <span class="col-md-4" id="indicator">Timer Not Running</span>
+            </div>
+            <hr>
+            <div class="row">
+                <div class="col-md-2">
+                <p class="numbersignblock numbers" id="number1">
+                    7
+                </p>
+                </div>
+                <div class="col-md-2">
+                <p class="numbersignblock sign">
+                    x
+                </p>
+                </div>
+                <div class="col-md-2">
+                <p class="numbersignblock numbers" id="number2">
+                    8
+                </p>
+                </div>
+            </div>
+            <div class="row">
+                <span class="col-md-4">
+                <input id="result" type="number" class="numbersignblock">
+                </span>
+                <span class="col-md-2 numbersignblock" id="declaration">
+                </span>
+                </td>
+            </div>
+            <div class="row">
+                <span class="col-md-2" class="numbersignblock">
+                   <button type="button" id="next_btn" class="btn btn-primary">Next</button>
+                </span>
+            </div>
+        </div>
+        </div>
+        <script type="text/python">
+
+from browser import document,alert
+from browser.html import P
+import browser.timer
+import math
+import random
+import time
+
+right_questions = 0
+wrong_questions = 0
+timeout_questions = 0
+started = 0
+time_remaining= 7000
+counted = 0
+
+
+def handle_timer():
+    global time_remaining
+    global started
+    global timeout_questions
+    global counted
+    if not started:
+        return
+    time_remaining -= 100
+    if time_remaining <= 0:
+        time_remaining = 6999
+        started = 0
+        document['indicator'].text = "Timer Not Running"
+        document['declaration'].text = "Timed_out"
+        document['declaration'].classList.add('decl_timeout')
+        if not counted:
+            timeout_questions += 1
+            counted = 1
+            document['timeout_questions'].text = str(timeout_questions)
+            document['tot_questions'].text = str(right_questions + wrong_questions + timeout_questions)
+    document['time_left'].text = "{0:.2d}".format(math.floor(time_remaining/1000) + 1)
+
+def handle_start(event):
+    global time_remaining
+    global started
+    global counted
+    started = 1
+    time_remaining = 6999
+    document['time_left'].text = "{0:.2d}".format(math.floor(time_remaining/1000) + 1)
+    document['indicator'].text = "Timer Started"
+    document['number1'].text = "{0:.2d}".format(random.randint(2,10))
+    document['number2'].text = "{0:.2d}".format(random.randint(2,10))
+    document['result'].value = ""
+    document['declaration'].text = ""
+    document['declaration'].classList.remove('decl_right')
+    document['declaration'].classList.remove('decl_wrong')
+    document['declaration'].classList.remove('decl_timeout')
+    document['result'].focus()
+    counted = 0
+
+def check_answer(event):
+    global started
+    global right_questions
+    global wrong_questions
+    global counted
+    answer = int(document['result'].value)
+    number1 = int(document['number1'].text)
+    number2 = int(document['number2'].text)
+    declare = ""
+    if answer == number1 * number2:
+        declare = "Correct"
+        started = 0
+        document['indicator'].text = "Timer Not Running"
+        document['declaration'].classList.remove('decl_timeout')
+        document['declaration'].classList.remove('decl_wrong')
+        document['declaration'].classList.add('decl_right')
+        document['next_btn'].focus()
+        if not counted:
+            right_questions += 1
+            counted = 1
+            document['right_questions'].text = str(right_questions)
+            document['tot_questions'].text = str(right_questions + wrong_questions + timeout_questions)
+    else:
+        declare = "Wrong"
+        document['declaration'].classList.remove('decl_timeout')
+        document['declaration'].classList.add('decl_wrong')
+        document['result'].focus()
+        if not counted:
+            wrong_questions += 1
+            counted = 1
+            document['wrong_questions'].text = str(wrong_questions)
+            document['tot_questions'].text = str(right_questions + wrong_questions + timeout_questions)
+    document['declaration'].text = declare
+
+document['start_btn'].bind('click',handle_start)
+document['next_btn'].bind('click',handle_start)
+document['result'].bind('change',check_answer)
+document['start_btn'].focus()
+browser.timer.set_interval(handle_timer,100)
+        </script>
+    </body>
+</html>
