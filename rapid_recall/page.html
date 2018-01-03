@@ -3,6 +3,7 @@
     <head>
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
         <script type="text/javascript" src="brython.js"></script>
+        <script type="text/javascript" src="brython_stdlib.js"></script>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width" />
         <title>Rapid Recall</title>
@@ -25,6 +26,18 @@
             color: #FFF;
             background: #C0C0C0;
             border: 1px solid #C0C0C0;
+        }
+        .decl_right {
+            color: #FFFFFF;
+            background: #00816A;
+        }
+        .decl_wrong {
+            color: #FFFFFF;
+            background: #800000;
+        }
+        .decl_timeout {
+            color: #FFFFFF;
+            background: #b366ff;
         }
         </style>
     </head>
@@ -54,8 +67,32 @@
             </table>
             <hr>
             <div class="row">
+                <span class="col-md-3">Total Questions:</span>
+                <span class="col-md-1" id="tot_questions">0</span>
+            </div>
+            <div class="row">
+                <span class="col-md-3">Question Right:</span>
+                <span class="col-md-1" id="right_questions">0</span>
+            </div>
+            <div class="row">
+                <span class="col-md-3">Question Wrong:</span>
+                <span class="col-md-1" id="wrong_questions">0</span>
+            </div>
+            <div class="row">
+                <span class="col-md-3">Question Timedout:</span>
+                <span class="col-md-1" id="timeout_questions">0</span>
+            </div>
+            <div class="row">
+                <span class="col-md-3">Time Left:</span>
+                <span class="col-md-1" id="time_left">1</span>
+            </div>
+            <div class="row">
+                <span class="col-md-4" id="indicator">Timer Not Running</span>
+            </div>
+            <hr>
+            <div class="row">
                 <div class="col-md-2">
-                <p class="numbersignblock numbers">
+                <p class="numbersignblock numbers" id="number1">
                     7
                 </p>
                 </div>
@@ -65,16 +102,23 @@
                 </p>
                 </div>
                 <div class="col-md-2">
-                <p class="numbersignblock numbers">
+                <p class="numbersignblock numbers" id="number2">
                     8
                 </p>
                 </div>
             </div>
             <div class="row">
-                <div class="col-md-6">
+                <span class="col-md-4">
                 <input id="result" type="number" class="numbersignblock">
-                </div>
+                </span>
+                <span class="col-md-2 numbersignblock" id="declaration">
+                </span>
                 </td>
+            </div>
+            <div class="row">
+                <span class="col-md-2" class="numbersignblock">
+                   <button type="button" id="next_btn" class="btn btn-primary">Next</button>
+                </span>
             </div>
         </div>
         </div>
