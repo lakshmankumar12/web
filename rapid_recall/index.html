@@ -44,27 +44,13 @@
     <body onLoad="brython(2)">
         <div class="container">
         <div class="panel panel-body">
-            <table>
-                <tbody>
-                <tr>
-                    <td>
-                        <label for="no_questions">Number of Questions</label>
-                        <input id="no_questions" type="number" value="5" min="3" max="20" pattern="\d*" class="form-group">
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <label for="timer_duration">Timer Duration</label>
-                        <input id="timer_duration" type="number" value="7" min="3" max="20" pattern="\d*" class="form-group">
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <button type="button" id="start_btn" class="btn btn-primary">Start</button>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
+            <div class="row">
+                <label for="timer_duration">Timer Duration</label>
+                <input id="timer_duration" type="number" value="7" min="3" max="20" pattern="\d*" class="form-group">
+            </div>
+            <div class="row">
+                <button type="button" id="start_btn" class="btn btn-primary">Start</button>
+            </div>
             <hr>
             <div class="row">
                 <span class="col-md-3">Total Questions:</span>
@@ -135,6 +121,7 @@ right_questions = 0
 wrong_questions = 0
 timeout_questions = 0
 started = 0
+given_timer = 7
 time_remaining= 7000
 counted = 0
 
@@ -144,19 +131,19 @@ def handle_timer():
     global started
     global timeout_questions
     global counted
+    global given_timer
     if not started:
         return
     time_remaining -= 100
     if time_remaining <= 0:
-        time_remaining = 6999
+        time_remaining = given_timer * 1000 - 1
         started = 0
         document['indicator'].text = "Timer Not Running"
-        document['declaration'].text = "Timed_out"
-        document['declaration'].classList.add('decl_timeout')
         if not counted:
             timeout_questions += 1
             counted = 1
             document['timeout_questions'].text = str(timeout_questions)
+            check_answer_internal("Timeout")
             document['tot_questions'].text = str(right_questions + wrong_questions + timeout_questions)
     document['time_left'].text = "{0:.2d}".format(math.floor(time_remaining/1000) + 1)
 
@@ -164,8 +151,9 @@ def handle_start(event):
     global time_remaining
     global started
     global counted
+    global given_timer
     started = 1
-    time_remaining = 6999
+    time_remaining = given_timer * 1000 - 1
     document['time_left'].text = "{0:.2d}".format(math.floor(time_remaining/1000) + 1)
     document['indicator'].text = "Timer Started"
     document['number1'].text = "{0:.2d}".format(random.randint(2,10))
@@ -178,15 +166,25 @@ def handle_start(event):
     document['result'].focus()
     counted = 0
 
+def handle_question_timer_duration_change(event):
+    global given_timer
+    given_timer = int(document['timer_duration'].value)
+
 def check_answer(event):
+    check_answer_internal("Wrong")
+
+def check_answer_internal(declare):
     global started
     global right_questions
     global wrong_questions
     global counted
-    answer = int(document['result'].value)
+    answer_str = document['result'].value
+    if answer_str:
+        answer = int(answer_str)
+    else:
+        answer = 0
     number1 = int(document['number1'].text)
     number2 = int(document['number2'].text)
-    declare = ""
     if answer == number1 * number2:
         declare = "Correct"
         started = 0
@@ -201,9 +199,12 @@ def check_answer(event):
             document['right_questions'].text = str(right_questions)
             document['tot_questions'].text = str(right_questions + wrong_questions + timeout_questions)
     else:
-        declare = "Wrong"
-        document['declaration'].classList.remove('decl_timeout')
-        document['declaration'].classList.add('decl_wrong')
+        if declare == "Wrong":
+            document['declaration'].classList.remove('decl_timeout')
+            document['declaration'].classList.add('decl_wrong')
+        elif declare == "Timeout":
+            document['declaration'].classList.remove('decl_wrong')
+            document['declaration'].classList.add('decl_timeout')
         document['result'].focus()
         if not counted:
             wrong_questions += 1
@@ -212,6 +213,7 @@ def check_answer(event):
             document['tot_questions'].text = str(right_questions + wrong_questions + timeout_questions)
     document['declaration'].text = declare
 
+document['timer_duration'].bind('change',handle_question_timer_duration_change)
 document['start_btn'].bind('click',handle_start)
 document['next_btn'].bind('click',handle_start)
 document['result'].bind('change',check_answer)
